@@ -3,7 +3,7 @@
     use App\Teste;
     use App\Controllers\CategoriaController;
 
-    // definir uma variavel com a pasta base    
+    // definir uma variavel com a pasta base SSS   
     $basedir = "/staysharp";
 
 ?>
