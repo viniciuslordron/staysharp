@@ -204,7 +204,35 @@
         }
 
         public function excluir(): string {
-            return "Em construção"; 
+            $id = $_POST["id"] ?? 0;
+            $produtoExiste = false;
+
+            foreach ($_SESSION["produtos"] as $produto) {
+                if ($produto["id"] == $id) {
+                    $produtoExiste = true;
+                }
+            }
+
+            if (!$produtoExiste) {
+                $_SESSION["mensagem"] = "Produto não encontrado";
+                $_SESSION["tipo"] = "erro";
+                header("Location: /staysharp/produtos");
+                exit;
+            }
+
+            $_SESSION["produtos"] = array_filter(
+                $_SESSION["produtos"],
+                function ($produto) use ($id) {
+                    return $produto["id"] != $id;
+                }
+            );
+
+            $_SESSION["produtos"] = array_values($_SESSION["produtos"]);
+
+            $_SESSION["mensagem"] = "Produto excluído";
+            $_SESSION["tipo"] = "sucesso";
+            header("Location: /staysharp/produtos");
+            exit;
         }
 
         // ===== apis =====
