@@ -22,7 +22,27 @@
         }
 
         public function editar(): string {
-            return "Em construção"; 
+            $id = $_GET["id"] ?? 0;
+            $categoria = null;
+
+            foreach ($_SESSION["categorias"] as $c) {
+                if ($c["id"] == $id) {
+                    $categoria = $c;
+                }
+            }
+
+            if ($categoria === null) {
+                $_SESSION["mensagem"] = "Categoria não encontrada";
+                $_SESSION["tipo"] = "erro";
+                header("Location: /staysharp/categorias");
+                exit;
+            }
+
+            $titulo = "Editar Categoria";
+            return (new Render())->render(
+                'categorias/editar',
+                compact('titulo', 'categoria')
+            );
         }
 
         // formulários
@@ -49,11 +69,76 @@
         }
 
         public function update(): string {
-            return "Em construção"; 
+            $id = $_POST["id"] ?? 0;
+            $indice = null;
+
+            foreach ($_SESSION["categorias"] as $i => $c) {
+                if ($c["id"] == $id) {
+                    $indice = $i;
+                }
+            }
+
+            if ($indice === null) {
+                $_SESSION["mensagem"] = "Categoria não encontrada";
+                $_SESSION["tipo"] = "erro";
+                header("Location: /staysharp/categorias");
+                exit;
+            }
+
+            if (!isset($_POST["nome"]) || trim($_POST["nome"]) === "") {
+                $_SESSION["mensagem"] = "Informe o nome da categoria";
+                $_SESSION["tipo"] = "erro";
+                header("Location: /staysharp/categorias/editar?id=$id");
+                exit;
+            }
+
+            $_SESSION["categorias"][$indice]["nome"] = trim($_POST["nome"]);
+
+            $_SESSION["mensagem"] = "Categoria atualizada";
+            $_SESSION["tipo"] = "sucesso";
+            header("Location: /staysharp/categorias");
+            exit;
         }
 
         public function excluir(): string {
-            return "Em construção";
+            $id = $_POST["id"] ?? 0;
+            $categoriaExiste = false;
+
+            foreach ($_SESSION["categorias"] as $c) {
+                if ($c["id"] == $id) {
+                    $categoriaExiste = true;
+                }
+            }
+
+            if (!$categoriaExiste) {
+                $_SESSION["mensagem"] = "Categoria não encontrada";
+                $_SESSION["tipo"] = "erro";
+                header("Location: /staysharp/categorias");
+                exit;
+            }
+
+            foreach ($_SESSION["produtos"] as $produto) {
+                if ($produto["categoria_id"] == $id) {
+                    $_SESSION["mensagem"] = "Não é possível excluir: existem produtos nesta categoria";
+                    $_SESSION["tipo"] = "erro";
+                    header("Location: /staysharp/categorias");
+                    exit;
+                }
+            }
+
+            $_SESSION["categorias"] = array_filter(
+                $_SESSION["categorias"],
+                function ($c) use ($id) {
+                    return $c["id"] != $id;
+                }
+            );
+
+            $_SESSION["categorias"] = array_values($_SESSION["categorias"]);
+
+            $_SESSION["mensagem"] = "Categoria excluída";
+            $_SESSION["tipo"] = "sucesso";
+            header("Location: /staysharp/categorias");
+            exit;
         }
 
         // apis 
