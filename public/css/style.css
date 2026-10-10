@@ -317,3 +317,24 @@ img {
         font-size: 14px;
     }
 }
+.busca {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.busca input,
+.busca select {
+    padding: 10px;
+    border: 1px solid var(--cinza);
+    border-radius: var(--raio);
+    font-size: 15px;
+    font-family: inherit;
+    background: var(--branco);
+}
+
+.busca input {
+    flex: 1;
+    min-width: 200px;
+}
