@@ -53,7 +53,29 @@
         }
 
         public function editar(): string {
-            return "Em construção"; 
+            $id = $_GET["id"] ?? 0;
+            $produto = null;
+
+            foreach ($_SESSION["produtos"] as $p) {
+                if ($p["id"] == $id) {
+                    $produto = $p;
+                }
+            }
+
+            if ($produto === null) {
+                $_SESSION["mensagem"] = "Produto não encontrado";
+                $_SESSION["tipo"] = "erro";
+                header("Location: /staysharp/produtos");
+                exit;
+            }
+
+            $titulo = "Editar Produto";
+            $categorias = $_SESSION["categorias"];
+
+            return (new Render())->render(
+                'produtos/criar',
+                compact('titulo', 'categorias', 'produto')
+            );
         }
 
         //formulários 
@@ -113,7 +135,72 @@
         }
 
         public function update(): string {
-            return "Em construção";
+            $id = $_POST["id"] ?? 0;
+            $indice = null;
+
+            foreach ($_SESSION["produtos"] as $i => $produto) {
+                if ($produto["id"] == $id) {
+                    $indice = $i;
+                }
+            }
+
+            if ($indice === null) {
+                $_SESSION["mensagem"] = "Produto não encontrado";
+                $_SESSION["tipo"] = "erro";
+                header("Location: /staysharp/produtos");
+                exit;
+            }
+
+            if (!isset($_POST["nome"], $_POST["preco"], $_POST["categoria_id"])) {
+                $_SESSION["mensagem"] = "Preencha os campos obrigatórios";
+                $_SESSION["tipo"] = "erro";
+                header("Location: /staysharp/produtos/editar?id=$id");
+                exit;
+            }
+
+            if (trim($_POST["nome"]) === "") {
+                $_SESSION["mensagem"] = "Informe o nome do produto";
+                $_SESSION["tipo"] = "erro";
+                header("Location: /staysharp/produtos/editar?id=$id");
+                exit;
+            }
+
+            if ((float) $_POST["preco"] <= 0) {
+                $_SESSION["mensagem"] = "O preço deve ser maior que zero";
+                $_SESSION["tipo"] = "erro";
+                header("Location: /staysharp/produtos/editar?id=$id");
+                exit;
+            }
+
+            $categoria_id = (int) $_POST["categoria_id"];
+            $categoriaExiste = false;
+
+            foreach ($_SESSION["categorias"] as $categoria) {
+                if ($categoria["id"] == $categoria_id) {
+                    $categoriaExiste = true;
+                }
+            }
+
+            if (!$categoriaExiste) {
+                $_SESSION["mensagem"] = "Categoria não encontrada";
+                $_SESSION["tipo"] = "erro";
+                header("Location: /staysharp/produtos/editar?id=$id");
+                exit;
+            }
+
+            $_SESSION["produtos"][$indice] = [
+                "id" => (int) $id,
+                "nome" => trim($_POST["nome"]),
+                "descricao" => trim($_POST["descricao"] ?? ""),
+                "preco" => (float) $_POST["preco"],
+                "categoria_id" => $categoria_id,
+                "imagem" => trim($_POST["imagem"] ?? "")
+            ];
+
+            $_SESSION["mensagem"] = "Produto atualizado com sucesso";
+            $_SESSION["tipo"] = "sucesso";
+            header("Location: /staysharp/produtos");
+            exit;
         }
 
         public function excluir(): string {
