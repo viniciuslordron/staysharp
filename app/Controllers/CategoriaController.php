@@ -27,7 +27,25 @@
 
         // formulários
         public function create(): string {
-            return "Em construção"; 
+            if (!isset($_POST["nome"]) || trim($_POST["nome"]) === "") {
+                $_SESSION["mensagem"] = "Informe o nome da categoria";
+                $_SESSION["tipo"] = "erro";
+                header("Location: /staysharp/categorias/cadastrar");
+                exit;
+            }
+
+            $nome = trim($_POST["nome"]);
+            $id = proximoId($_SESSION["categorias"]);
+
+            $_SESSION["categorias"][] = [
+                "id" => $id,
+                "nome" => $nome
+            ];
+
+            $_SESSION["mensagem"] = "Categoria cadastrada com sucesso";
+            $_SESSION["tipo"] = "sucesso";
+            header("Location: /staysharp/categorias");
+            exit;
         }
 
         public function update(): string {
