@@ -39,7 +39,43 @@
         }
 
         public function detalhe(): string {
-            return "Em construção";
+            $id = $_GET["id"] ?? "";
+
+            // procura o produto com esse id
+            $produto = null;
+            foreach ($_SESSION["produtos"] as $p) {
+                if ($p["id"] == $id) {
+                    $produto = $p;
+                    break;
+                }
+            }
+
+            // caso n exista produto
+            if ($produto === null) {
+                http_response_code(404);
+                $titulo = "Produto não encontrado";
+                return (new Render())->render(
+                    'produtos/detalhe',
+                    compact('titulo', 'produto')
+                );
+            }
+
+            // relacionamento
+            $nomesCategorias = array_column($_SESSION["categorias"], "nome", "id");
+            $nomeCategoria = $nomesCategorias[$produto["categoria_id"]] ?? "Sem categoria";
+
+                       // pedido pelo WhatsApp: número da loja com 55 + DDD + número, só dígitos
+            $whatsapp = "18997069289";
+            $mensagem = "Olá! Quero fazer um pedido:\n"
+                      . $produto["nome"] . "\n"
+                      . "Valor: R$ " . number_format($produto["preco"], 2, ",", ".");
+            $linkWhatsapp = "https://wa.me/" . $whatsapp . "?text=" . rawurlencode($mensagem);
+
+            $titulo = $produto["nome"];
+            return (new Render())->render(
+                'produtos/detalhe',
+                compact('titulo', 'produto', 'nomeCategoria', 'linkWhatsapp')
+            );
         }
 
         public function criar(): string {

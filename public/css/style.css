@@ -338,3 +338,64 @@ img {
     flex: 1;
     min-width: 200px;
 }
+.detalhe {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: start;
+}
+
+.detalhe-foto img,
+.detalhe-foto .sem-foto {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: var(--raio);
+    background: var(--cinza-claro);
+}
+
+.detalhe-foto .sem-foto {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cinza);
+}
+
+.detalhe-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.detalhe-info h1,
+.detalhe-info p {
+    margin: 0;
+}
+
+.detalhe-info .categoria {
+    text-decoration: none;
+}
+
+.detalhe-info .categoria:hover {
+    text-decoration: underline;
+}
+
+.detalhe-info .preco {
+    font-size: 28px;
+}
+
+@media (max-width: 700px) {
+    .detalhe {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}
+.btn-whatsapp {
+    background: var(--verde);
+    border-color: var(--verde);
+}
+
+.btn-whatsapp:hover {
+    background: #165c2f;
+    border-color: #165c2f;
+}
