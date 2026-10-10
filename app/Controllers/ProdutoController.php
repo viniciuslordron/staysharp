@@ -43,7 +43,13 @@
         }
 
         public function criar(): string {
-            return "Em construção";
+            $titulo = "Novo Produto";
+            $categorias = $_SESSION["categorias"];
+
+            return (new Render())->render(
+                'produtos/criar',
+                compact('titulo', 'categorias')
+            );
         }
 
         public function editar(): string {
@@ -52,7 +58,58 @@
 
         //formulários 
         public function create(): string {
-            return "Em construção"; 
+            if (!isset($_POST["nome"], $_POST["preco"], $_POST["categoria_id"])) {
+                $_SESSION["mensagem"] = "Preencha os campos obrigatórios";
+                $_SESSION["tipo"] = "erro";
+                header("Location: /staysharp/produtos/cadastrar");
+                exit;
+            }
+
+            if (trim($_POST["nome"]) === "") {
+                $_SESSION["mensagem"] = "Informe o nome do produto";
+                $_SESSION["tipo"] = "erro";
+                header("Location: /staysharp/produtos/cadastrar");
+                exit;
+            }
+
+            if ((float) $_POST["preco"] <= 0) {
+                $_SESSION["mensagem"] = "O preço deve ser maior que zero";
+                $_SESSION["tipo"] = "erro";
+                header("Location: /staysharp/produtos/cadastrar");
+                exit;
+            }
+
+            $categoria_id = (int) $_POST["categoria_id"];
+            $categoriaExiste = false;
+
+            foreach ($_SESSION["categorias"] as $categoria) {
+                if ($categoria["id"] == $categoria_id) {
+                    $categoriaExiste = true;
+                }
+            }
+
+            if (!$categoriaExiste) {
+                $_SESSION["mensagem"] = "Categoria não encontrada";
+                $_SESSION["tipo"] = "erro";
+                header("Location: /staysharp/produtos/cadastrar");
+                exit;
+            }
+
+            $id = proximoId($_SESSION["produtos"]);
+
+            $_SESSION["produtos"][] = [
+                "id" => $id,
+                "nome" => trim($_POST["nome"]),
+                "descricao" => trim($_POST["descricao"] ?? ""),
+                "preco" => (float) $_POST["preco"],
+                "categoria_id" => $categoria_id,
+                "imagem" => trim($_POST["imagem"] ?? "")
+            ];
+
+            $_SESSION["mensagem"] = "Produto cadastrado com sucesso";
+            $_SESSION["tipo"] = "sucesso";
+            header("Location: /staysharp/produtos");
+            exit;
         }
 
         public function update(): string {
