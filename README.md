@@ -140,37 +140,5 @@ Como funciona:
 | `POST /api/categorias/excluir` | `id` |
 
 > O Postman tem uma sessão separada do navegador, então ele começa com os dados do seed e não enxerga o que foi cadastrado pelo site.
-## Prints
 
-### Home
-![Home](docs/prints/01-home.png)
-
-### Lista de produtos
-![Produtos](docs/prints/02-produtos.png)
-
-### Filtro por categoria
-![Filtro](docs/prints/03-filtro-categoria.png)
-
-### Busca pelo nome
-![Busca](docs/prints/04-busca.png)
-
-### Detalhe do produto
-![Detalhe](docs/prints/05-detalhe.png)
-
-### Cadastro de produto
-![Cadastro](docs/prints/06-cadastrar-produto.png)
-
-### Validação com erro
-![Erro](docs/prints/08-mensagem-erro.png)
-
-### Edição de produto
-![Edição](docs/prints/09-editar-produto.png)
-
-### Categorias
-![Categorias](docs/prints/10-categorias.png)
-
-### Exclusão de categoria bloqueada
-![Bloqueio](docs/prints/11-excluir-categoria-bloqueado.png)
-
-### API em JSON
-![API](docs/prints/12-api-json.png)
+## Verificar as imagens: docs/prints
