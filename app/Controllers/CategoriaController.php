@@ -22,15 +22,18 @@
         }
 
         public function editar(): string {
+            //pega o id da categoria pela url
             $id = $_GET["id"] ?? 0;
             $categoria = null;
 
+            //procura a categoria na sessão
             foreach ($_SESSION["categorias"] as $c) {
                 if ($c["id"] == $id) {
                     $categoria = $c;
                 }
             }
 
+            //volta para a lista caso não encontre
             if ($categoria === null) {
                 $_SESSION["mensagem"] = "Categoria não encontrada";
                 $_SESSION["tipo"] = "erro";
@@ -47,6 +50,7 @@
 
         // formulários
         public function create(): string {
+            //verifica se o nome foi preenchido
             if (!isset($_POST["nome"]) || trim($_POST["nome"]) === "") {
                 $_SESSION["mensagem"] = "Informe o nome da categoria";
                 $_SESSION["tipo"] = "erro";
@@ -57,6 +61,7 @@
             $nome = trim($_POST["nome"]);
             $id = proximoId($_SESSION["categorias"]);
 
+            //adiciona a categoria na sessão
             $_SESSION["categorias"][] = [
                 "id" => $id,
                 "nome" => $nome
@@ -72,6 +77,7 @@
             $id = $_POST["id"] ?? 0;
             $indice = null;
 
+            //procura a posição da categoria na sessão
             foreach ($_SESSION["categorias"] as $i => $c) {
                 if ($c["id"] == $id) {
                     $indice = $i;
@@ -92,6 +98,7 @@
                 exit;
             }
 
+            //atualiza o nome da categoria
             $_SESSION["categorias"][$indice]["nome"] = trim($_POST["nome"]);
 
             $_SESSION["mensagem"] = "Categoria atualizada";
@@ -104,6 +111,7 @@
             $id = $_POST["id"] ?? 0;
             $categoriaExiste = false;
 
+            //verifica se a categoria existe
             foreach ($_SESSION["categorias"] as $c) {
                 if ($c["id"] == $id) {
                     $categoriaExiste = true;
@@ -117,6 +125,7 @@
                 exit;
             }
 
+            //impede excluir categoria que possui produtos
             foreach ($_SESSION["produtos"] as $produto) {
                 if ($produto["categoria_id"] == $id) {
                     $_SESSION["mensagem"] = "Não é possível excluir: existem produtos nesta categoria";
@@ -126,6 +135,7 @@
                 }
             }
 
+            //remove a categoria da sessão
             $_SESSION["categorias"] = array_filter(
                 $_SESSION["categorias"],
                 function ($c) use ($id) {
@@ -148,8 +158,10 @@
         }
 
         public function apiCreate(): string {
+            //informa que a resposta será em json
             header("Content-Type: application/json; charset=UTF-8");
 
+            //valida o nome recebido pela api
             if (!isset($_POST["nome"]) || trim($_POST["nome"]) === "") {
                 http_response_code(400);
                 return json_encode([
@@ -162,6 +174,7 @@
                 "nome" => trim($_POST["nome"])
             ];
 
+            //salva a nova categoria na sessão
             $_SESSION["categorias"][] = $categoria;
 
             http_response_code(201);
@@ -169,11 +182,13 @@
         }
 
         public function apiDelete(): string {
+            //informa que a resposta será em json
             header("Content-Type: application/json; charset=UTF-8");
 
             $id = $_POST["id"] ?? 0;
             $categoriaExiste = false;
 
+            //verifica se a categoria existe
             foreach ($_SESSION["categorias"] as $categoria) {
                 if ($categoria["id"] == $id) {
                     $categoriaExiste = true;
@@ -187,6 +202,7 @@
                 ], JSON_UNESCAPED_UNICODE);
             }
 
+            //impede excluir categoria que possui produtos
             foreach ($_SESSION["produtos"] as $produto) {
                 if ($produto["categoria_id"] == $id) {
                     http_response_code(400);
@@ -196,6 +212,7 @@
                 }
             }
 
+            //remove a categoria da sessão
             $_SESSION["categorias"] = array_filter(
                 $_SESSION["categorias"],
                 function ($categoria) use ($id) {
