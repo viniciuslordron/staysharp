@@ -148,11 +148,66 @@
         }
 
         public function apiCreate(): string {
-            return "Em construção";
+            header("Content-Type: application/json; charset=UTF-8");
+
+            if (!isset($_POST["nome"]) || trim($_POST["nome"]) === "") {
+                http_response_code(400);
+                return json_encode([
+                    "erro" => "Informe o nome da categoria"
+                ], JSON_UNESCAPED_UNICODE);
+            }
+
+            $categoria = [
+                "id" => proximoId($_SESSION["categorias"]),
+                "nome" => trim($_POST["nome"])
+            ];
+
+            $_SESSION["categorias"][] = $categoria;
+
+            http_response_code(201);
+            return json_encode($categoria, JSON_UNESCAPED_UNICODE);
         }
 
         public function apiDelete(): string {
-            return "Em construção";
+            header("Content-Type: application/json; charset=UTF-8");
+
+            $id = $_POST["id"] ?? 0;
+            $categoriaExiste = false;
+
+            foreach ($_SESSION["categorias"] as $categoria) {
+                if ($categoria["id"] == $id) {
+                    $categoriaExiste = true;
+                }
+            }
+
+            if (!$categoriaExiste) {
+                http_response_code(404);
+                return json_encode([
+                    "erro" => "Categoria não encontrada"
+                ], JSON_UNESCAPED_UNICODE);
+            }
+
+            foreach ($_SESSION["produtos"] as $produto) {
+                if ($produto["categoria_id"] == $id) {
+                    http_response_code(400);
+                    return json_encode([
+                        "erro" => "Não é possível excluir: existem produtos nesta categoria"
+                    ], JSON_UNESCAPED_UNICODE);
+                }
+            }
+
+            $_SESSION["categorias"] = array_filter(
+                $_SESSION["categorias"],
+                function ($categoria) use ($id) {
+                    return $categoria["id"] != $id;
+                }
+            );
+
+            $_SESSION["categorias"] = array_values($_SESSION["categorias"]);
+
+            return json_encode([
+                "mensagem" => "Excluído"
+            ], JSON_UNESCAPED_UNICODE);
         }
     }
 ?>

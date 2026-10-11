@@ -273,19 +273,133 @@
 
         // ===== apis =====
         public function list(): string {
-            return "Em construção";
+            header("Content-Type: application/json; charset=UTF-8");
+
+            $categoria = $_GET["categoria"] ?? "";
+            $busca = trim($_GET["busca"] ?? "");
+            $produtos = [];
+
+            foreach ($_SESSION["produtos"] as $produto) {
+                if ($categoria !== "" && $produto["categoria_id"] != $categoria) {
+                    continue;
+                }
+                if ($busca !== "" && !str_contains(mb_strtolower($produto["nome"]), mb_strtolower($busca))) {
+                    continue;
+                }
+                $produtos[] = $produto;
+            }
+
+            return json_encode($produtos, JSON_UNESCAPED_UNICODE);
         }
 
         public function show(): string {
-            return "Em construção";
+            header("Content-Type: application/json; charset=UTF-8");
+
+            $id = $_GET["id"] ?? 0;
+            $produtoEncontrado = null;
+
+            foreach ($_SESSION["produtos"] as $produto) {
+                if ($produto["id"] == $id) {
+                    $produtoEncontrado = $produto;
+                }
+            }
+
+            if ($produtoEncontrado === null) {
+                http_response_code(404);
+                return json_encode([
+                    "erro" => "Produto não encontrado"
+                ], JSON_UNESCAPED_UNICODE);
+            }
+
+            return json_encode($produtoEncontrado, JSON_UNESCAPED_UNICODE);
         }
 
         public function apiCreate(): string {
-            return "Em construção";
+            header("Content-Type: application/json; charset=UTF-8");
+
+            if (!isset($_POST["nome"], $_POST["preco"], $_POST["categoria_id"])) {
+                http_response_code(400);
+                return json_encode([
+                    "erro" => "Preencha os campos obrigatórios"
+                ], JSON_UNESCAPED_UNICODE);
+            }
+
+            if (trim($_POST["nome"]) === "") {
+                http_response_code(400);
+                return json_encode([
+                    "erro" => "Informe o nome do produto"
+                ], JSON_UNESCAPED_UNICODE);
+            }
+
+            if ((float) $_POST["preco"] <= 0) {
+                http_response_code(400);
+                return json_encode([
+                    "erro" => "O preço deve ser maior que zero"
+                ], JSON_UNESCAPED_UNICODE);
+            }
+
+            $categoria_id = (int) $_POST["categoria_id"];
+            $categoriaExiste = false;
+
+            foreach ($_SESSION["categorias"] as $categoria) {
+                if ($categoria["id"] == $categoria_id) {
+                    $categoriaExiste = true;
+                }
+            }
+
+            if (!$categoriaExiste) {
+                http_response_code(400);
+                return json_encode([
+                    "erro" => "Categoria não encontrada"
+                ], JSON_UNESCAPED_UNICODE);
+            }
+
+            $produto = [
+                "id" => proximoId($_SESSION["produtos"]),
+                "nome" => trim($_POST["nome"]),
+                "descricao" => trim($_POST["descricao"] ?? ""),
+                "preco" => (float) $_POST["preco"],
+                "categoria_id" => $categoria_id,
+                "imagem" => trim($_POST["imagem"] ?? "")
+            ];
+
+            $_SESSION["produtos"][] = $produto;
+
+            http_response_code(201);
+            return json_encode($produto, JSON_UNESCAPED_UNICODE);
         }
 
         public function apiDelete(): string {
-            return "Em construção";
+            header("Content-Type: application/json; charset=UTF-8");
+
+            $id = $_POST["id"] ?? 0;
+            $produtoExiste = false;
+
+            foreach ($_SESSION["produtos"] as $produto) {
+                if ($produto["id"] == $id) {
+                    $produtoExiste = true;
+                }
+            }
+
+            if (!$produtoExiste) {
+                http_response_code(404);
+                return json_encode([
+                    "erro" => "Produto não encontrado"
+                ], JSON_UNESCAPED_UNICODE);
+            }
+
+            $_SESSION["produtos"] = array_filter(
+                $_SESSION["produtos"],
+                function ($produto) use ($id) {
+                    return $produto["id"] != $id;
+                }
+            );
+
+            $_SESSION["produtos"] = array_values($_SESSION["produtos"]);
+
+            return json_encode([
+                "mensagem" => "Excluído"
+            ], JSON_UNESCAPED_UNICODE);
         }
     }
 ?>
