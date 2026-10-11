@@ -114,6 +114,61 @@
             );
         }
 
+        // recebe o upload de uma imagem e devolve o caminho relativo a public/img/
+        // sem arquivo novo, mantém o valor atual
+        private function enviarImagem(string $campo, string $atual, string $voltar): string {
+            if (!isset($_FILES[$campo]) || $_FILES[$campo]["error"] === UPLOAD_ERR_NO_FILE) {
+                return $atual;
+            }
+
+            $arquivo = $_FILES[$campo];
+            $tipos = [
+                "image/jpeg" => "jpg",
+                "image/png" => "png",
+                "image/webp" => "webp",
+                "image/gif" => "gif"
+            ];
+
+            $erro = null;
+            $info = false;
+
+            if ($arquivo["error"] !== UPLOAD_ERR_OK) {
+                $erro = "Não foi possível enviar a imagem";
+            } elseif ($arquivo["size"] > 5 * 1024 * 1024) {
+                $erro = "A imagem deve ter no máximo 5 MB";
+            } else {
+                $info = @getimagesize($arquivo["tmp_name"]);
+
+                if ($info === false || !isset($tipos[$info["mime"]])) {
+                    $erro = "Envie uma imagem JPG, PNG, WEBP ou GIF";
+                }
+            }
+
+            if ($erro !== null) {
+                $_SESSION["mensagem"] = $erro;
+                $_SESSION["tipo"] = "erro";
+                header("Location: $voltar");
+                exit;
+            }
+
+            $pasta = __DIR__ . "/../../public/img/produtos";
+
+            if (!is_dir($pasta)) {
+                mkdir($pasta, 0755, true);
+            }
+
+            $nome = bin2hex(random_bytes(8)) . "." . $tipos[$info["mime"]];
+
+            if (!move_uploaded_file($arquivo["tmp_name"], "$pasta/$nome")) {
+                $_SESSION["mensagem"] = "Não foi possível salvar a imagem";
+                $_SESSION["tipo"] = "erro";
+                header("Location: $voltar");
+                exit;
+            }
+
+            return "produtos/$nome";
+        }
+
         //formulários 
         public function create(): string {
             if (!isset($_POST["nome"], $_POST["preco"], $_POST["categoria_id"])) {
@@ -155,14 +210,18 @@
 
             $id = proximoId($_SESSION["produtos"]);
 
+            $voltar = "/staysharp/produtos/cadastrar";
+            $imagem = $this->enviarImagem("imagem", "", $voltar);
+            $imagemVerso = $this->enviarImagem("imagem_verso", "", $voltar);
+
             $_SESSION["produtos"][] = [
                 "id" => $id,
                 "nome" => trim($_POST["nome"]),
                 "descricao" => trim($_POST["descricao"] ?? ""),
                 "preco" => (float) $_POST["preco"],
                 "categoria_id" => $categoria_id,
-                "imagem" => trim($_POST["imagem"] ?? ""),
-                "imagem_verso" => trim($_POST["imagem_verso"] ?? "")
+                "imagem" => $imagem,
+                "imagem_verso" => $imagemVerso
             ];
 
             $_SESSION["mensagem"] = "Produto cadastrado com sucesso";
@@ -225,14 +284,23 @@
                 exit;
             }
 
+            // sem arquivo novo, mantém a imagem que o produto já tinha
+            $voltar = "/staysharp/produtos/editar?id=$id";
+            $imagem = $this->enviarImagem("imagem", $_SESSION["produtos"][$indice]["imagem"] ?? "", $voltar);
+            $imagemVerso = $this->enviarImagem("imagem_verso", $_SESSION["produtos"][$indice]["imagem_verso"] ?? "", $voltar);
+
+            if (isset($_POST["remover_verso"])) {
+                $imagemVerso = "";
+            }
+
             $_SESSION["produtos"][$indice] = [
                 "id" => (int) $id,
                 "nome" => trim($_POST["nome"]),
                 "descricao" => trim($_POST["descricao"] ?? ""),
                 "preco" => (float) $_POST["preco"],
                 "categoria_id" => $categoria_id,
-                "imagem" => trim($_POST["imagem"] ?? ""),
-                "imagem_verso" => trim($_POST["imagem_verso"] ?? "")
+                "imagem" => $imagem,
+                "imagem_verso" => $imagemVerso
             ];
 
             $_SESSION["mensagem"] = "Produto atualizado com sucesso";
