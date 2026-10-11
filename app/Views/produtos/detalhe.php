@@ -9,7 +9,13 @@
     <div class="detalhe">
         <div class="detalhe-foto">
             <?php if ($produto["imagem"] !== ""): ?>
-                <img src="/staysharp/public/img/<?= $produto["imagem"] ?>" alt="<?= $produto["nome"] ?>">
+                <?php $verso = $produto["imagem_verso"] ?? ""; ?>
+                <div class="troca-foto">
+                    <img src="/staysharp/public/img/<?= $produto["imagem"] ?>" alt="<?= $produto["nome"] ?>">
+                    <?php if ($verso !== ""): ?>
+                        <img class="verso" src="/staysharp/public/img/<?= $verso ?>" alt="<?= $produto["nome"] ?> (costas)">
+                    <?php endif; ?>
+                </div>
             <?php else: ?>
                 <div class="sem-foto">Sem foto</div>
             <?php endif; ?>

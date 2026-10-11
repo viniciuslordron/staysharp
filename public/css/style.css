@@ -399,3 +399,308 @@ img {
     background: #165c2f;
     border-color: #165c2f;
 }
+
+/* troca de foto (frente/costas) ao passar o mouse */
+.troca-foto {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    background: var(--cinza-claro);
+}
+
+.troca-foto img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    object-fit: cover;
+    border-radius: 0;
+    transition: opacity 0.4s ease;
+}
+
+.troca-foto .verso {
+    opacity: 0;
+}
+
+.troca-foto:hover .verso {
+    opacity: 1;
+}
+
+.detalhe-foto .troca-foto {
+    border-radius: var(--raio);
+}
+
+
+/* ===== logo no topo ===== */
+.logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo img {
+    width: 36px;
+    height: 36px;
+    mix-blend-mode: lighten; /* o fundo preto da logo some no topo */
+}
+
+/* ===== home ===== */
+.hero {
+    background: var(--preto);
+    color: var(--branco);
+    text-align: center;
+    border-radius: var(--raio);
+    padding: 48px 20px;
+    margin-bottom: 40px;
+}
+
+.hero-logo {
+    width: 120px;
+    height: 120px;
+    mix-blend-mode: lighten;
+}
+
+.hero h1 {
+    font-size: 40px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin: 12px 0 8px;
+}
+
+.hero p {
+    margin: 0 0 24px;
+    color: var(--cinza-claro);
+}
+
+.hero .acoes {
+    justify-content: center;
+}
+
+.btn-claro {
+    background: var(--branco);
+    color: var(--preto);
+    border-color: var(--branco);
+}
+
+.btn-claro:hover {
+    background: var(--cinza-claro);
+    border-color: var(--cinza-claro);
+}
+
+.btn-contorno {
+    background: transparent;
+    color: var(--branco);
+    border-color: var(--branco);
+}
+
+.btn-contorno:hover {
+    background: var(--branco);
+    color: var(--preto);
+    border-color: var(--branco);
+}
+
+.secao {
+    margin-bottom: 40px;
+}
+
+.secao h2 {
+    margin: 0 0 16px;
+    font-size: 22px;
+}
+
+.grid-categorias {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.card-categoria {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    background: var(--branco);
+    border: 1px solid var(--cinza-claro);
+    border-radius: var(--raio);
+    font-size: 18px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.card-categoria:hover {
+    background: var(--preto);
+    border-color: var(--preto);
+    color: var(--branco);
+}
+
+.ver-todos {
+    text-align: center;
+    margin-top: 24px;
+}
+
+a.troca-foto {
+    display: block;
+}
+
+
+/* ===== topo minimalista ===== */
+.topo {
+    border-bottom: 1px solid #222;
+}
+
+.topo-conteudo {
+    padding-top: 18px;
+    padding-bottom: 18px;
+}
+
+.logo {
+    font-size: 15px;
+    font-weight: normal;
+    letter-spacing: 5px;
+}
+
+.logo img {
+    width: 28px;
+    height: 28px;
+}
+
+.menu {
+    gap: 4px 26px;
+}
+
+.menu a {
+    color: var(--cinza);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: color 0.2s;
+}
+
+.menu a:hover {
+    color: var(--branco);
+    text-decoration: none;
+}
+
+.menu .menu-destaque {
+    color: var(--cinza);
+    font-weight: normal;
+}
+
+.rodape {
+    border-top: 1px solid #222;
+    color: var(--cinza);
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+
+.rodape a {
+    color: var(--cinza);
+    text-decoration: none;
+}
+
+.rodape a:hover {
+    color: var(--branco);
+}
+
+
+/* ===== carrossel da home ===== */
+.hero.carrossel {
+    position: relative;
+    padding: 0;
+    height: min(78vh, 600px);
+    overflow: hidden;
+    background: #0b0b0b;
+}
+
+.carrossel .slides {
+    position: absolute;
+    inset: 0;
+}
+
+.carrossel .slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: contain; /* mostra o banner inteiro, sem cortar */
+    opacity: 0;
+    transition: opacity 0.6s ease;
+}
+
+.carrossel .slide.ativo {
+    opacity: 1;
+}
+
+.carrossel .hero-logo {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 44px;
+    height: 44px;
+    z-index: 2;
+    border-radius: 6px;
+}
+
+.carrossel .seta {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.45);
+    color: var(--branco);
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.carrossel .seta:hover {
+    background: rgba(0, 0, 0, 0.75);
+}
+
+.carrossel .seta-esq { left: 12px; }
+.carrossel .seta-dir { right: 12px; }
+
+.hero-rodape {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 16px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.pontos {
+    display: flex;
+    gap: 8px;
+}
+
+.ponto {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.35);
+    cursor: pointer;
+}
+
+.ponto.ativo {
+    background: var(--branco);
+}
+
+/* banners 16:9: o carrossel acompanha a proporção da imagem */
+.hero.carrossel {
+    height: auto;
+    aspect-ratio: 16 / 9;
+}
+
+.carrossel .slide {
+    object-fit: cover;
+}

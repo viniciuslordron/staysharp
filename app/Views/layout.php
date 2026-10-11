@@ -9,10 +9,12 @@
 <body>
     <header class="topo">
         <div class="container topo-conteudo">
-            <a class="logo" href="/staysharp/">STAYSHARP</a>
+            <a class="logo" href="/staysharp/">
+                <img src="/staysharp/public/img/logo.jpg" alt="">
+                STAYSHARP
+            </a>
             <nav class="menu">
-                <a href="/staysharp/">Início</a>
-                <a href="/staysharp/produtos">Produtos</a>
+                <a href="/staysharp/produtos">Todos</a>
                 <a href="/staysharp/produtos?categoria=1">Camisas</a>
                 <a href="/staysharp/produtos?categoria=2">Bonés</a>
                 <a href="/staysharp/produtos?categoria=3">Adesivos</a>
