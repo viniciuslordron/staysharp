@@ -1,12 +1,15 @@
 <h1>Editar Categoria</h1>
 
-<form method="POST" action="/staysharp/categorias/atualizar">
+<form class="formulario" method="POST" action="/staysharp/categorias/atualizar">
     <input type="hidden" name="id" value="<?= $categoria["id"] ?>">
 
-    <label for="nome">Nome</label>
-    <input type="text" name="nome" id="nome" value="<?= $categoria["nome"] ?>" required>
+    <label for="nome">
+        Nome
+        <input type="text" name="nome" id="nome" value="<?= $categoria["nome"] ?>" required>
+    </label>
 
-    <button type="submit">Salvar</button>
+    <div class="acoes">
+        <button class="btn" type="submit">Salvar</button>
+        <a class="btn btn-secundario" href="/staysharp/categorias">Voltar</a>
+    </div>
 </form>
-
-<a href="/staysharp/categorias">Voltar</a>

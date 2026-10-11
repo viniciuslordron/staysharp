@@ -1,20 +1,29 @@
-<section class="hero carrossel">
-    <div class="slides">
-        <img class="slide ativo" src="/staysharp/public/img/banner-bone.jpg" alt="Boné Stay Sharp">
-        <img class="slide" src="/staysharp/public/img/banner-camisa.jpg" alt="Camiseta Stay Sharp">
-    </div>
+<div class="carrossel-full">
+    <section class="carrossel">
+        <div class="slides">
+            <picture class="slide ativo">
+                <source media="(max-width: 640px)" srcset="/staysharp/public/img/banners/banner-bone-mobile.jpg">
+                <img src="/staysharp/public/img/banners/banner-bone.jpg" alt="Boné Stay Sharp por R$ 35,00">
+            </picture>
+            <picture class="slide">
+                <source media="(max-width: 640px)" srcset="/staysharp/public/img/banners/banner-camiseta-mobile.jpg">
+                <img src="/staysharp/public/img/banners/banner-camiseta.jpg" alt="Camiseta Stay Sharp por R$ 89,90">
+            </picture>
+        </div>
 
-    <button class="seta seta-esq" type="button" aria-label="Anterior">&#8249;</button>
-    <button class="seta seta-dir" type="button" aria-label="Próximo">&#8250;</button>
+        <button class="seta seta-esq" type="button" aria-label="Anterior">&#8249;</button>
+        <button class="seta seta-dir" type="button" aria-label="Próximo">&#8250;</button>
 
-    <div class="hero-rodape">
-        <a class="btn btn-claro" href="/staysharp/produtos">Ver produtos</a>
         <div class="pontos">
             <span class="ponto ativo"></span>
             <span class="ponto"></span>
         </div>
+    </section>
+
+    <div class="carrossel-cta">
+        <a class="btn btn-claro" href="/staysharp/produtos">Ver produtos</a>
     </div>
-</section>
+</div>
 
 <script>
     (function () {
