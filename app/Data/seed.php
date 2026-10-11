@@ -10,16 +10,16 @@
 
     $_SESSION["produtos"] = [
         ["id" => 1, "nome" => "Camisa Staysharp Preta", "descricao" => "Camisa de algodão com estampa frontal.",
-         "preco" => 89.90, "categoria_id" => 1, "imagem" => "/public/img/oversizedSP.jpeg"],
+         "preco" => 89.90, "categoria_id" => 1, "imagem" => "camisa-frente.jpg", "imagem_verso" => "camisa-costas.jpg"],
         ["id" => 2, "nome" => "Camisa Staysharp Branca", "descricao" => "Camisa de algodão com logo no peito.",
-         "preco" => 89.90, "categoria_id" => 1, "imagem" => "/public/img/oversizedSP.jpeg"],
+         "preco" => 89.90, "categoria_id" => 1, "imagem" => "camisa-frente.jpg", "imagem_verso" => "camisa-costas.jpg"],
         ["id" => 3, "nome" => "Boné Trucker Staysharp", "descricao" => "Boné trucker com tela atrás.",
-         "preco" => 79.90, "categoria_id" => 2, "imagem" => "/public/img/oversizedSP.jpeg"],
+         "preco" => 79.90, "categoria_id" => 2, "imagem" => "oversizedSP.jpeg"],
         ["id" => 4, "nome" => "Boné Dad Hat Staysharp", "descricao" => "Boné aba curva com bordado.",
-         "preco" => 69.90, "categoria_id" => 2, "imagem" => "/public/img/oversizedSP.jpeg"],
+         "preco" => 69.90, "categoria_id" => 2, "imagem" => "oversizedSP.jpeg"],
         ["id" => 5, "nome" => "Adesivo Logo Staysharp", "descricao" => "Adesivo de vinil resistente à água.",
-         "preco" => 9.90, "categoria_id" => 3, "imagem" => "/public/img/oversizedSP.jpeg"],
+         "preco" => 9.90, "categoria_id" => 3, "imagem" => "oversizedSP.jpeg"],
         ["id" => 6, "nome" => "Kit de Adesivos Staysharp", "descricao" => "Kit com 5 adesivos sortidos.",
-         "preco" => 24.90, "categoria_id" => 3, "imagem" => "/public/img/oversizedSP.jpeg"]
+         "preco" => 24.90, "categoria_id" => 3, "imagem" => "oversizedSP.jpeg"]
     ];
 ?>

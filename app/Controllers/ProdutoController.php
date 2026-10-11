@@ -161,7 +161,8 @@
                 "descricao" => trim($_POST["descricao"] ?? ""),
                 "preco" => (float) $_POST["preco"],
                 "categoria_id" => $categoria_id,
-                "imagem" => trim($_POST["imagem"] ?? "")
+                "imagem" => trim($_POST["imagem"] ?? ""),
+                "imagem_verso" => trim($_POST["imagem_verso"] ?? "")
             ];
 
             $_SESSION["mensagem"] = "Produto cadastrado com sucesso";
@@ -230,7 +231,8 @@
                 "descricao" => trim($_POST["descricao"] ?? ""),
                 "preco" => (float) $_POST["preco"],
                 "categoria_id" => $categoria_id,
-                "imagem" => trim($_POST["imagem"] ?? "")
+                "imagem" => trim($_POST["imagem"] ?? ""),
+                "imagem_verso" => trim($_POST["imagem_verso"] ?? "")
             ];
 
             $_SESSION["mensagem"] = "Produto atualizado com sucesso";
