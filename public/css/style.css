@@ -897,3 +897,37 @@ p:has(> .btn) {
 .tabela-fixa td:nth-child(2) {
     text-align: center;
 }
+
+
+/* upload de imagem no formulário de produto */
+.formulario input[type="file"] {
+    padding: 8px;
+    background: var(--fundo);
+    border-style: dashed;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.formulario small {
+    font-weight: normal;
+    color: var(--cinza);
+}
+
+.previa-upload {
+    width: 120px;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    border-radius: var(--raio);
+    border: 1px solid var(--cinza-claro);
+}
+
+.formulario .opcao {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    font-weight: normal;
+}
+
+.formulario .opcao input {
+    padding: 0;
+}
