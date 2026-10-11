@@ -56,48 +56,150 @@ img {
     padding-right: 16px;
 }
 
+/* ===== fontes ===== */
+@font-face {
+    font-family: "Barlow Condensed";
+    font-weight: 500;
+    src: url("/staysharp/public/fonts/barlow-condensed-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Barlow Condensed";
+    font-weight: 600;
+    src: url("/staysharp/public/fonts/barlow-condensed-latin-600-normal.woff2") format("woff2");
+}
+
+/* ===== header Stay Sharp ===== */
+:root {
+    --carbono: #000000;
+    --oliva: #4a4f2e;
+    --oliva-escuro: #3a3e23;
+    --linha: #cbbf9c;
+    --patch-texto: #efe9dc;
+    --cinza-metal: #8d918a;
+}
+
 .topo {
-    background: var(--preto);
-    color: var(--branco);
+    background: var(--carbono);
+    border-bottom: 1px solid #1e1e1e;
 }
 
 .topo-conteudo {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-    padding-top: 14px;
-    padding-bottom: 14px;
+    gap: 28px;
+    padding-top: 16px;
+    padding-bottom: 16px;
 }
 
-.logo {
-    color: var(--branco);
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 22px;
-    letter-spacing: 3px;
+.logo img {
+    display: block;
+    height: 42px;
+    width: auto;
+    /* a logo é preta com fundo transparente: inverte para ficar clara no topo preto */
+    filter: invert(1) brightness(.94);
 }
 
-.menu {
+/* o patch de velcro com as categorias */
+.patch {
     display: flex;
-    flex-wrap: wrap;
-    gap: 4px 18px;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    position: relative;
+    padding: 9px 12px;
+    border-radius: 10px;
+    background-color: var(--oliva);
+    background-image:
+        repeating-linear-gradient(45deg, rgba(0, 0, 0, .10) 0 2px, transparent 2px 5px),
+        repeating-linear-gradient(-45deg, rgba(255, 255, 255, .04) 0 2px, transparent 2px 5px);
+    box-shadow: inset 0 0 0 1px var(--oliva-escuro), 0 2px 0 rgba(0, 0, 0, .6);
 }
 
-.menu a {
-    color: var(--branco);
+/* a costura em volta do patch */
+.patch::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border: 2px dashed var(--linha);
+    border-radius: 7px;
+    opacity: .7;
+    pointer-events: none;
+}
+
+.patch a {
+    position: relative;
+    padding: 4px 10px;
+    font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+    letter-spacing: .3px;
+    color: var(--patch-texto);
     text-decoration: none;
-    font-size: 15px;
 }
 
-.menu a:hover {
+.patch a:hover {
+    color: #ffffff;
     text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 5px;
 }
 
-.menu .menu-destaque {
-    color: var(--destaque);
-    font-weight: bold;
+/* página atual: marcada com o espadas da marca */
+.patch a[aria-current="page"]::before {
+    content: "♠";
+    margin-right: 6px;
+    font-size: 15px;
+    vertical-align: 2px;
+}
+
+/* links de quem administra a loja: discretos, separados do menu */
+.menu-admin {
+    display: flex;
+    gap: 18px;
+}
+
+.menu-admin a {
+    font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+    font-weight: 500;
+    font-size: 17px;
+    color: var(--cinza-metal);
+    text-decoration: none;
+}
+
+.menu-admin a:hover {
+    color: var(--patch-texto);
+}
+
+.topo a:focus-visible {
+    outline: 2px solid var(--linha);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+/* celular: logo e admin em cima, patch inteiro embaixo */
+@media (max-width: 860px) {
+    .topo-conteudo {
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .menu-admin {
+        margin-left: auto;
+    }
+
+    .patch {
+        order: 3;
+        width: 100%;
+        margin-left: 0;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+
+    .patch a {
+        font-size: 18px;
+        padding: 4px 6px;
+    }
 }
 
 .rodape {
@@ -398,4 +500,400 @@ img {
 .btn-whatsapp:hover {
     background: #165c2f;
     border-color: #165c2f;
+}
+
+/* troca de foto (frente/costas) ao passar o mouse */
+.troca-foto {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    background: var(--cinza-claro);
+}
+
+.troca-foto img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    object-fit: cover;
+    border-radius: 0;
+    transition: opacity 0.4s ease;
+}
+
+.troca-foto .verso {
+    opacity: 0;
+}
+
+.troca-foto:hover .verso {
+    opacity: 1;
+}
+
+.detalhe-foto .troca-foto {
+    border-radius: var(--raio);
+}
+
+
+/* ===== home ===== */
+.hero {
+    background: var(--preto);
+    color: var(--branco);
+    text-align: center;
+    border-radius: var(--raio);
+    padding: 48px 20px;
+    margin-bottom: 40px;
+}
+
+.hero-logo {
+    width: 120px;
+    height: 120px;
+    mix-blend-mode: lighten;
+}
+
+.hero h1 {
+    font-size: 40px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin: 12px 0 8px;
+}
+
+.hero p {
+    margin: 0 0 24px;
+    color: var(--cinza-claro);
+}
+
+.hero .acoes {
+    justify-content: center;
+}
+
+.btn-claro {
+    background: var(--branco);
+    color: var(--preto);
+    border-color: var(--branco);
+}
+
+.btn-claro:hover {
+    background: var(--cinza-claro);
+    border-color: var(--cinza-claro);
+}
+
+.btn-contorno {
+    background: transparent;
+    color: var(--branco);
+    border-color: var(--branco);
+}
+
+.btn-contorno:hover {
+    background: var(--branco);
+    color: var(--preto);
+    border-color: var(--branco);
+}
+
+.secao {
+    margin-bottom: 40px;
+}
+
+.secao h2 {
+    margin: 0 0 16px;
+    font-size: 22px;
+}
+
+.grid-categorias {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.card-categoria {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    background: var(--branco);
+    border: 1px solid var(--cinza-claro);
+    border-radius: var(--raio);
+    font-size: 18px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.card-categoria:hover {
+    background: var(--preto);
+    border-color: var(--preto);
+    color: var(--branco);
+}
+
+.ver-todos {
+    text-align: center;
+    margin-top: 24px;
+}
+
+a.troca-foto {
+    display: block;
+}
+
+
+.rodape {
+    border-top: 1px solid #222;
+    color: var(--cinza);
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+
+.rodape a {
+    color: var(--cinza);
+    text-decoration: none;
+}
+
+.rodape a:hover {
+    color: var(--branco);
+}
+
+
+/* ===== carrossel da home (full bleed) ===== */
+html,
+body {
+    overflow-x: clip; /* evita rolagem lateral causada pelo 100vw */
+}
+
+.carrossel-full {
+    position: relative;
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-top: -24px; /* encosta no header (padding-top do main) */
+    margin-bottom: 40px;
+}
+
+.carrossel {
+    position: relative;
+    height: clamp(380px, 37.5vw, 760px); /* 37.5% = proporção 2400x900 */
+    overflow: hidden;
+    background: #000;
+    border-radius: 0;
+}
+
+.carrossel .slides {
+    position: absolute;
+    inset: 0;
+}
+
+.carrossel .slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+}
+
+.carrossel .slide.ativo {
+    opacity: 1;
+}
+
+.carrossel .slide img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    object-position: 28% center; /* protege o texto, que fica à esquerda */
+}
+
+.carrossel .seta {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.45);
+    color: var(--branco);
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.carrossel .seta:hover {
+    background: rgba(0, 0, 0, 0.75);
+}
+
+.carrossel .seta-esq { left: 16px; }
+.carrossel .seta-dir { right: 16px; }
+
+.carrossel .pontos {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 16px;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.ponto {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.35);
+    cursor: pointer;
+}
+
+.ponto.ativo {
+    background: var(--branco);
+}
+
+/* botão no canto inferior direito do banner (computador) */
+.carrossel-cta {
+    position: absolute;
+    right: 24px;
+    bottom: 20px;
+    z-index: 2;
+}
+
+@media (max-width: 640px) {
+    .carrossel {
+        height: auto;
+        aspect-ratio: 4 / 5;
+    }
+
+    .carrossel .slide img {
+        object-position: center;
+    }
+
+    /* celular: o botão fica abaixo do banner, sem cobrir a arte */
+    .carrossel-cta {
+        position: static;
+        padding: 16px;
+        text-align: center;
+    }
+}
+
+/* ações dentro de tabelas */
+.tabela .acoes {
+    margin-top: 0;
+    padding-top: 0;
+}
+
+.tabela .btn {
+    padding: 5px 12px;
+}
+
+p:has(> .btn) {
+    margin-top: 20px;
+}
+
+/* ===== cabeçalho da página (título + botão à direita) ===== */
+.cabecalho-pagina {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.cabecalho-pagina h1 {
+    margin: 0;
+}
+
+/* ===== tabela alinhada ===== */
+.tabela-fixa {
+    table-layout: fixed;
+}
+
+.tabela-fixa th,
+.tabela-fixa td {
+    vertical-align: middle;
+}
+
+.tabela-fixa .col-id {
+    width: 80px;
+}
+
+.tabela-fixa .col-acoes {
+    width: 90px;
+    text-align: right;
+}
+
+/* ===== menu de 3 pontos ===== */
+.menu-acoes {
+    position: relative;
+    display: inline-block;
+}
+
+.menu-acoes-botao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--cinza-escuro);
+    cursor: pointer;
+}
+
+.menu-acoes-botao:hover,
+.menu-acoes-botao[aria-expanded="true"] {
+    background: var(--cinza-claro);
+    color: var(--preto);
+}
+
+.menu-acoes-lista {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 10;
+    min-width: 140px;
+    background: var(--branco);
+    border: 1px solid var(--cinza-claro);
+    border-radius: var(--raio);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    padding: 4px;
+    text-align: left;
+}
+
+.menu-acoes-lista[hidden] {
+    display: none;
+}
+
+.menu-acoes-lista form {
+    margin: 0;
+}
+
+.menu-acoes-lista a,
+.menu-acoes-lista button {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--preto);
+    font: inherit;
+    font-size: 14px;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.menu-acoes-lista a:hover,
+.menu-acoes-lista button:hover {
+    background: var(--cinza-claro);
+}
+
+.menu-acoes-lista .excluir {
+    color: var(--destaque);
+}
+
+.menu-acoes-lista .excluir:hover {
+    background: var(--vermelho-fundo);
+}
+
+/* coluna do nome centralizada */
+.tabela-fixa th:nth-child(2),
+.tabela-fixa td:nth-child(2) {
+    text-align: center;
 }

@@ -37,6 +37,11 @@
         <input type="text" name="imagem" value="<?= $produto["imagem"] ?? "" ?>" placeholder="Nome do arquivo em public/img/">
     </label>
 
+    <label>
+        Imagem de costas (opcional)
+        <input type="text" name="imagem_verso" value="<?= $produto["imagem_verso"] ?? "" ?>" placeholder="Aparece ao passar o mouse">
+    </label>
+
     <button class="btn" type="submit">Salvar</button>
 </form>
 

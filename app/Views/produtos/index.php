@@ -23,7 +23,13 @@
         <?php foreach ($produtos as $p): ?>
             <div class="card-produto">
                 <?php if ($p["imagem"] !== ""): ?>
-                    <img src="/staysharp/public/img/<?= $p["imagem"] ?>" alt="<?= $p["nome"] ?>">
+                    <?php $verso = $p["imagem_verso"] ?? ""; ?>
+                    <div class="troca-foto">
+                        <img src="/staysharp/public/img/<?= $p["imagem"] ?>" alt="<?= $p["nome"] ?>">
+                        <?php if ($verso !== ""): ?>
+                            <img class="verso" src="/staysharp/public/img/<?= $verso ?>" alt="<?= $p["nome"] ?> (costas)">
+                        <?php endif; ?>
+                    </div>
                 <?php else: ?>
                     <div class="sem-foto">Sem foto</div>
                 <?php endif; ?>
