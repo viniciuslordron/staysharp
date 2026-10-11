@@ -51,8 +51,7 @@ staysharp/
 └── public/
     ├── css/style.css
     ├── fonts/
-    ├── img/
-    └── teste-api.html     # página para testar as APIs
+    └── img/
 ```
 
 ## Rotas
@@ -123,6 +122,21 @@ Como funciona:
 
 ## Como testar as APIs
 
-Abra **http://localhost/staysharp/public/teste-api.html**. Lá tem links para os GET e formulários para os POST, e a resposta em JSON abre numa aba nova.
+**GET:** abra direto no navegador, por exemplo:
 
-> Use o mesmo navegador do site: o Postman tem uma sessão separada e não enxerga os dados que você cadastrou pelo navegador.
+- http://localhost/staysharp/api/categorias
+- http://localhost/staysharp/api/produtos
+- http://localhost/staysharp/api/produtos?categoria=1
+- http://localhost/staysharp/api/produto?id=1
+- http://localhost/staysharp/api/produto?id=99 (retorna 404)
+
+**POST:** use o Postman (ou Insomnia), com o Body em `x-www-form-urlencoded`:
+
+| Rota | Campos |
+|---|---|
+| `POST /api/produtos` | `nome`, `descricao`, `preco`, `categoria_id`, `imagem` |
+| `POST /api/produtos/excluir` | `id` |
+| `POST /api/categorias` | `nome` |
+| `POST /api/categorias/excluir` | `id` |
+
+> O Postman tem uma sessão separada do navegador, então ele começa com os dados do seed e não enxerga o que foi cadastrado pelo site.
