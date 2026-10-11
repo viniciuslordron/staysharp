@@ -89,9 +89,11 @@
         }
 
         public function editar(): string {
+            //pega o id do produto pela url
             $id = $_GET["id"] ?? 0;
             $produto = null;
 
+            //procura o produto na sessão
             foreach ($_SESSION["produtos"] as $p) {
                 if ($p["id"] == $id) {
                     $produto = $p;
@@ -171,6 +173,7 @@
 
         //formulários 
         public function create(): string {
+            //verifica se os campos obrigatórios foram enviados
             if (!isset($_POST["nome"], $_POST["preco"], $_POST["categoria_id"])) {
                 $_SESSION["mensagem"] = "Preencha os campos obrigatórios";
                 $_SESSION["tipo"] = "erro";
@@ -195,6 +198,7 @@
             $categoria_id = (int) $_POST["categoria_id"];
             $categoriaExiste = false;
 
+            //verifica se a categoria escolhida existe
             foreach ($_SESSION["categorias"] as $categoria) {
                 if ($categoria["id"] == $categoria_id) {
                     $categoriaExiste = true;
@@ -214,6 +218,7 @@
             $imagem = $this->enviarImagem("imagem", "", $voltar);
             $imagemVerso = $this->enviarImagem("imagem_verso", "", $voltar);
 
+            //adiciona o produto na sessão
             $_SESSION["produtos"][] = [
                 "id" => $id,
                 "nome" => trim($_POST["nome"]),
@@ -234,6 +239,7 @@
             $id = $_POST["id"] ?? 0;
             $indice = null;
 
+            //procura a posição do produto na sessão
             foreach ($_SESSION["produtos"] as $i => $produto) {
                 if ($produto["id"] == $id) {
                     $indice = $i;
@@ -293,6 +299,7 @@
                 $imagemVerso = "";
             }
 
+            //atualiza os dados do produto na sessão
             $_SESSION["produtos"][$indice] = [
                 "id" => (int) $id,
                 "nome" => trim($_POST["nome"]),
@@ -313,6 +320,7 @@
             $id = $_POST["id"] ?? 0;
             $produtoExiste = false;
 
+            //verifica se o produto existe
             foreach ($_SESSION["produtos"] as $produto) {
                 if ($produto["id"] == $id) {
                     $produtoExiste = true;
@@ -326,6 +334,7 @@
                 exit;
             }
 
+            //remove o produto da sessão
             $_SESSION["produtos"] = array_filter(
                 $_SESSION["produtos"],
                 function ($produto) use ($id) {
@@ -343,12 +352,14 @@
 
         // ===== apis =====
         public function list(): string {
+            //informa que a resposta será em json
             header("Content-Type: application/json; charset=UTF-8");
 
             $categoria = $_GET["categoria"] ?? "";
             $busca = trim($_GET["busca"] ?? "");
             $produtos = [];
 
+            //filtra os produtos pela categoria e pela busca
             foreach ($_SESSION["produtos"] as $produto) {
                 if ($categoria !== "" && $produto["categoria_id"] != $categoria) {
                     continue;
@@ -363,11 +374,13 @@
         }
 
         public function show(): string {
+            //informa que a resposta será em json
             header("Content-Type: application/json; charset=UTF-8");
 
             $id = $_GET["id"] ?? 0;
             $produtoEncontrado = null;
 
+            //procura o produto pelo id
             foreach ($_SESSION["produtos"] as $produto) {
                 if ($produto["id"] == $id) {
                     $produtoEncontrado = $produto;
@@ -385,8 +398,10 @@
         }
 
         public function apiCreate(): string {
+            //informa que a resposta será em json
             header("Content-Type: application/json; charset=UTF-8");
 
+            //valida os campos recebidos pela api
             if (!isset($_POST["nome"], $_POST["preco"], $_POST["categoria_id"])) {
                 http_response_code(400);
                 return json_encode([
@@ -411,6 +426,7 @@
             $categoria_id = (int) $_POST["categoria_id"];
             $categoriaExiste = false;
 
+            //verifica se a categoria existe
             foreach ($_SESSION["categorias"] as $categoria) {
                 if ($categoria["id"] == $categoria_id) {
                     $categoriaExiste = true;
@@ -434,6 +450,7 @@
                 "imagem_verso" => trim($_POST["imagem_verso"] ?? "")
             ];
 
+            //salva o produto na sessão
             $_SESSION["produtos"][] = $produto;
 
             http_response_code(201);
@@ -441,11 +458,13 @@
         }
 
         public function apiDelete(): string {
+            //informa que a resposta será em json
             header("Content-Type: application/json; charset=UTF-8");
 
             $id = $_POST["id"] ?? 0;
             $produtoExiste = false;
 
+            //verifica se o produto existe
             foreach ($_SESSION["produtos"] as $produto) {
                 if ($produto["id"] == $id) {
                     $produtoExiste = true;
@@ -459,6 +478,7 @@
                 ], JSON_UNESCAPED_UNICODE);
             }
 
+            //remove o produto da sessão
             $_SESSION["produtos"] = array_filter(
                 $_SESSION["produtos"],
                 function ($produto) use ($id) {
