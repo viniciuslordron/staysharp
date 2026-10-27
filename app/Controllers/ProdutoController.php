@@ -1,26 +1,28 @@
 <?php
     namespace App\Controllers;
     use App\Views\Render;
+    use App\Services\ProdutoService;
+    use App\Services\CategoriaService;
 
     class ProdutoController {
-        // telas 
+        private ProdutoService $service;
+        private CategoriaService $categoriaService;
+
+        public function __construct() {
+            $this->service = new ProdutoService();
+            $this->categoriaService = new CategoriaService();
+        }
+
+        // telas
         public function index(): string {
-            $categorias = $_SESSION["categorias"];
+            $categorias = $this->categoriaService->listar();
 
             $categoria = $_GET["categoria"] ?? "";
             $busca = trim ($_GET["busca"] ?? "");
 
             //montar o a lista com os produtos que veio do filtro
-            $produtos = [];
-            foreach ($_SESSION["produtos"] as $p){
-                if ($categoria !== "" && $p["categoria_id"] != $categoria){
-                    continue;
-                }
-                if ($busca !== "" && !str_contains(mb_strtolower($p["nome"]), mb_strtolower($busca))) {
-                    continue;
-                }
-                $produtos[] = $p;
-            }
+            $produtos = $this->service->listar($categoria, $busca);
+
             // relacionamento: [1 => "Camisas", 2 => "Bonés", 3 => "Adesivos"]
             $nomesCategorias = array_column($categorias, "nome", "id");
 
@@ -39,16 +41,10 @@
         }
 
         public function detalhe(): string {
-            $id = $_GET["id"] ?? "";
+            $id = (int) ($_GET["id"] ?? 0);
 
             // procura o produto com esse id
-            $produto = null;
-            foreach ($_SESSION["produtos"] as $p) {
-                if ($p["id"] == $id) {
-                    $produto = $p;
-                    break;
-                }
-            }
+            $produto = $this->service->buscarPorId($id);
 
             // caso n exista produto
             if ($produto === null) {
@@ -61,8 +57,7 @@
             }
 
             // relacionamento
-            $nomesCategorias = array_column($_SESSION["categorias"], "nome", "id");
-            $nomeCategoria = $nomesCategorias[$produto["categoria_id"]] ?? "Sem categoria";
+            $nomeCategoria = $produto["categoria_nome"] ?? "Sem categoria";
 
                        // pedido pelo WhatsApp: número da loja com 55 + DDD + número, só dígitos
             $whatsapp = "18997069289";
@@ -80,7 +75,7 @@
 
         public function criar(): string {
             $titulo = "Novo Produto";
-            $categorias = $_SESSION["categorias"];
+            $categorias = $this->categoriaService->listar();
 
             return (new Render())->render(
                 'produtos/criar',
@@ -90,15 +85,10 @@
 
         public function editar(): string {
             //pega o id do produto pela url
-            $id = $_GET["id"] ?? 0;
-            $produto = null;
+            $id = (int) ($_GET["id"] ?? 0);
 
             //procura o produto na sessão
-            foreach ($_SESSION["produtos"] as $p) {
-                if ($p["id"] == $id) {
-                    $produto = $p;
-                }
-            }
+            $produto = $this->service->buscarPorId($id);
 
             if ($produto === null) {
                 $_SESSION["mensagem"] = "Produto não encontrado";
@@ -108,7 +98,7 @@
             }
 
             $titulo = "Editar Produto";
-            $categorias = $_SESSION["categorias"];
+            $categorias = $this->categoriaService->listar();
 
             return (new Render())->render(
                 'produtos/criar',
@@ -171,7 +161,7 @@
             return "produtos/$nome";
         }
 
-        //formulários 
+        //formulários
         public function create(): string {
             //verifica se os campos obrigatórios foram enviados
             if (!isset($_POST["nome"], $_POST["preco"], $_POST["categoria_id"])) {
@@ -196,14 +186,9 @@
             }
 
             $categoria_id = (int) $_POST["categoria_id"];
-            $categoriaExiste = false;
 
             //verifica se a categoria escolhida existe
-            foreach ($_SESSION["categorias"] as $categoria) {
-                if ($categoria["id"] == $categoria_id) {
-                    $categoriaExiste = true;
-                }
-            }
+            $categoriaExiste = $this->categoriaService->buscarPorId($categoria_id) !== null;
 
             if (!$categoriaExiste) {
                 $_SESSION["mensagem"] = "Categoria não encontrada";
@@ -212,22 +197,19 @@
                 exit;
             }
 
-            $id = proximoId($_SESSION["produtos"]);
-
             $voltar = "/staysharp/produtos/cadastrar";
             $imagem = $this->enviarImagem("imagem", "", $voltar);
             $imagemVerso = $this->enviarImagem("imagem_verso", "", $voltar);
 
             //adiciona o produto na sessão
-            $_SESSION["produtos"][] = [
-                "id" => $id,
-                "nome" => trim($_POST["nome"]),
-                "descricao" => trim($_POST["descricao"] ?? ""),
-                "preco" => (float) $_POST["preco"],
-                "categoria_id" => $categoria_id,
-                "imagem" => $imagem,
-                "imagem_verso" => $imagemVerso
-            ];
+            $this->service->criar(
+                trim($_POST["nome"]),
+                trim($_POST["descricao"] ?? ""),
+                (float) $_POST["preco"],
+                $categoria_id,
+                $imagem,
+                $imagemVerso
+            );
 
             $_SESSION["mensagem"] = "Produto cadastrado com sucesso";
             $_SESSION["tipo"] = "sucesso";
@@ -236,17 +218,12 @@
         }
 
         public function update(): string {
-            $id = $_POST["id"] ?? 0;
-            $indice = null;
+            $id = (int) ($_POST["id"] ?? 0);
 
             //procura a posição do produto na sessão
-            foreach ($_SESSION["produtos"] as $i => $produto) {
-                if ($produto["id"] == $id) {
-                    $indice = $i;
-                }
-            }
+            $produtoAtual = $this->service->buscarPorId($id);
 
-            if ($indice === null) {
+            if ($produtoAtual === null) {
                 $_SESSION["mensagem"] = "Produto não encontrado";
                 $_SESSION["tipo"] = "erro";
                 header("Location: /staysharp/produtos");
@@ -275,13 +252,7 @@
             }
 
             $categoria_id = (int) $_POST["categoria_id"];
-            $categoriaExiste = false;
-
-            foreach ($_SESSION["categorias"] as $categoria) {
-                if ($categoria["id"] == $categoria_id) {
-                    $categoriaExiste = true;
-                }
-            }
+            $categoriaExiste = $this->categoriaService->buscarPorId($categoria_id) !== null;
 
             if (!$categoriaExiste) {
                 $_SESSION["mensagem"] = "Categoria não encontrada";
@@ -292,23 +263,23 @@
 
             // sem arquivo novo, mantém a imagem que o produto já tinha
             $voltar = "/staysharp/produtos/editar?id=$id";
-            $imagem = $this->enviarImagem("imagem", $_SESSION["produtos"][$indice]["imagem"] ?? "", $voltar);
-            $imagemVerso = $this->enviarImagem("imagem_verso", $_SESSION["produtos"][$indice]["imagem_verso"] ?? "", $voltar);
+            $imagem = $this->enviarImagem("imagem", $produtoAtual["imagem"] ?? "", $voltar);
+            $imagemVerso = $this->enviarImagem("imagem_verso", $produtoAtual["imagem_verso"] ?? "", $voltar);
 
             if (isset($_POST["remover_verso"])) {
                 $imagemVerso = "";
             }
 
             //atualiza os dados do produto na sessão
-            $_SESSION["produtos"][$indice] = [
-                "id" => (int) $id,
-                "nome" => trim($_POST["nome"]),
-                "descricao" => trim($_POST["descricao"] ?? ""),
-                "preco" => (float) $_POST["preco"],
-                "categoria_id" => $categoria_id,
-                "imagem" => $imagem,
-                "imagem_verso" => $imagemVerso
-            ];
+            $this->service->atualizar(
+                $id,
+                trim($_POST["nome"]),
+                trim($_POST["descricao"] ?? ""),
+                (float) $_POST["preco"],
+                $categoria_id,
+                $imagem,
+                $imagemVerso
+            );
 
             $_SESSION["mensagem"] = "Produto atualizado com sucesso";
             $_SESSION["tipo"] = "sucesso";
@@ -317,15 +288,10 @@
         }
 
         public function excluir(): string {
-            $id = $_POST["id"] ?? 0;
-            $produtoExiste = false;
+            $id = (int) ($_POST["id"] ?? 0);
 
             //verifica se o produto existe
-            foreach ($_SESSION["produtos"] as $produto) {
-                if ($produto["id"] == $id) {
-                    $produtoExiste = true;
-                }
-            }
+            $produtoExiste = $this->service->buscarPorId($id) !== null;
 
             if (!$produtoExiste) {
                 $_SESSION["mensagem"] = "Produto não encontrado";
@@ -335,14 +301,7 @@
             }
 
             //remove o produto da sessão
-            $_SESSION["produtos"] = array_filter(
-                $_SESSION["produtos"],
-                function ($produto) use ($id) {
-                    return $produto["id"] != $id;
-                }
-            );
-
-            $_SESSION["produtos"] = array_values($_SESSION["produtos"]);
+            $this->service->excluir($id);
 
             $_SESSION["mensagem"] = "Produto excluído";
             $_SESSION["tipo"] = "sucesso";
@@ -357,18 +316,9 @@
 
             $categoria = $_GET["categoria"] ?? "";
             $busca = trim($_GET["busca"] ?? "");
-            $produtos = [];
 
             //filtra os produtos pela categoria e pela busca
-            foreach ($_SESSION["produtos"] as $produto) {
-                if ($categoria !== "" && $produto["categoria_id"] != $categoria) {
-                    continue;
-                }
-                if ($busca !== "" && !str_contains(mb_strtolower($produto["nome"]), mb_strtolower($busca))) {
-                    continue;
-                }
-                $produtos[] = $produto;
-            }
+            $produtos = $this->service->listar($categoria, $busca);
 
             return json_encode($produtos, JSON_UNESCAPED_UNICODE);
         }
@@ -377,15 +327,10 @@
             //informa que a resposta será em json
             header("Content-Type: application/json; charset=UTF-8");
 
-            $id = $_GET["id"] ?? 0;
-            $produtoEncontrado = null;
+            $id = (int) ($_GET["id"] ?? 0);
 
             //procura o produto pelo id
-            foreach ($_SESSION["produtos"] as $produto) {
-                if ($produto["id"] == $id) {
-                    $produtoEncontrado = $produto;
-                }
-            }
+            $produtoEncontrado = $this->service->buscarPorId($id);
 
             if ($produtoEncontrado === null) {
                 http_response_code(404);
@@ -424,14 +369,9 @@
             }
 
             $categoria_id = (int) $_POST["categoria_id"];
-            $categoriaExiste = false;
 
             //verifica se a categoria existe
-            foreach ($_SESSION["categorias"] as $categoria) {
-                if ($categoria["id"] == $categoria_id) {
-                    $categoriaExiste = true;
-                }
-            }
+            $categoriaExiste = $this->categoriaService->buscarPorId($categoria_id) !== null;
 
             if (!$categoriaExiste) {
                 http_response_code(400);
@@ -440,18 +380,16 @@
                 ], JSON_UNESCAPED_UNICODE);
             }
 
-            $produto = [
-                "id" => proximoId($_SESSION["produtos"]),
-                "nome" => trim($_POST["nome"]),
-                "descricao" => trim($_POST["descricao"] ?? ""),
-                "preco" => (float) $_POST["preco"],
-                "categoria_id" => $categoria_id,
-                "imagem" => trim($_POST["imagem"] ?? ""),
-                "imagem_verso" => trim($_POST["imagem_verso"] ?? "")
-            ];
-
             //salva o produto na sessão
-            $_SESSION["produtos"][] = $produto;
+            $id = $this->service->criar(
+                trim($_POST["nome"]),
+                trim($_POST["descricao"] ?? ""),
+                (float) $_POST["preco"],
+                $categoria_id,
+                trim($_POST["imagem"] ?? ""),
+                trim($_POST["imagem_verso"] ?? "")
+            );
+            $produto = $this->service->buscarPorId($id);
 
             http_response_code(201);
             return json_encode($produto, JSON_UNESCAPED_UNICODE);
@@ -461,15 +399,10 @@
             //informa que a resposta será em json
             header("Content-Type: application/json; charset=UTF-8");
 
-            $id = $_POST["id"] ?? 0;
-            $produtoExiste = false;
+            $id = (int) ($_POST["id"] ?? 0);
 
             //verifica se o produto existe
-            foreach ($_SESSION["produtos"] as $produto) {
-                if ($produto["id"] == $id) {
-                    $produtoExiste = true;
-                }
-            }
+            $produtoExiste = $this->service->buscarPorId($id) !== null;
 
             if (!$produtoExiste) {
                 http_response_code(404);
@@ -479,14 +412,7 @@
             }
 
             //remove o produto da sessão
-            $_SESSION["produtos"] = array_filter(
-                $_SESSION["produtos"],
-                function ($produto) use ($id) {
-                    return $produto["id"] != $id;
-                }
-            );
-
-            $_SESSION["produtos"] = array_values($_SESSION["produtos"]);
+            $this->service->excluir($id);
 
             return json_encode([
                 "mensagem" => "Excluído"
