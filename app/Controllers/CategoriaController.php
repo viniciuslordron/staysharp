@@ -1,12 +1,19 @@
 <?php
     namespace App\Controllers;
     use App\Views\Render;
+    use App\Services\CategoriaService;
 
     class CategoriaController {
+        private CategoriaService $service;
+
+        public function __construct() {
+            $this->service = new CategoriaService();
+        }
+
         // ===== telas =====
         public function index(): string {
             $titulo = "Categorias";
-            $categorias = $_SESSION["categorias"];
+            $categorias = $this->service->listar();
             return (new Render())->render(
                 'categorias/index',
                 compact('titulo', 'categorias')
@@ -23,15 +30,10 @@
 
         public function editar(): string {
             //pega o id da categoria pela url
-            $id = $_GET["id"] ?? 0;
-            $categoria = null;
+            $id = (int) ($_GET["id"] ?? 0);
 
             //procura a categoria na sessão
-            foreach ($_SESSION["categorias"] as $c) {
-                if ($c["id"] == $id) {
-                    $categoria = $c;
-                }
-            }
+            $categoria = $this->service->buscarPorId($id);
 
             //volta para a lista caso não encontre
             if ($categoria === null) {
@@ -59,13 +61,9 @@
             }
 
             $nome = trim($_POST["nome"]);
-            $id = proximoId($_SESSION["categorias"]);
 
             //adiciona a categoria na sessão
-            $_SESSION["categorias"][] = [
-                "id" => $id,
-                "nome" => $nome
-            ];
+            $this->service->criar($nome);
 
             $_SESSION["mensagem"] = "Categoria cadastrada com sucesso";
             $_SESSION["tipo"] = "sucesso";
@@ -74,17 +72,10 @@
         }
 
         public function update(): string {
-            $id = $_POST["id"] ?? 0;
-            $indice = null;
+            $id = (int) ($_POST["id"] ?? 0);
 
             //procura a posição da categoria na sessão
-            foreach ($_SESSION["categorias"] as $i => $c) {
-                if ($c["id"] == $id) {
-                    $indice = $i;
-                }
-            }
-
-            if ($indice === null) {
+            if ($this->service->buscarPorId($id) === null) {
                 $_SESSION["mensagem"] = "Categoria não encontrada";
                 $_SESSION["tipo"] = "erro";
                 header("Location: /staysharp/categorias");
@@ -99,7 +90,7 @@
             }
 
             //atualiza o nome da categoria
-            $_SESSION["categorias"][$indice]["nome"] = trim($_POST["nome"]);
+            $this->service->atualizar($id, trim($_POST["nome"]));
 
             $_SESSION["mensagem"] = "Categoria atualizada";
             $_SESSION["tipo"] = "sucesso";
@@ -108,17 +99,10 @@
         }
 
         public function excluir(): string {
-            $id = $_POST["id"] ?? 0;
-            $categoriaExiste = false;
+            $id = (int) ($_POST["id"] ?? 0);
 
             //verifica se a categoria existe
-            foreach ($_SESSION["categorias"] as $c) {
-                if ($c["id"] == $id) {
-                    $categoriaExiste = true;
-                }
-            }
-
-            if (!$categoriaExiste) {
+            if ($this->service->buscarPorId($id) === null) {
                 $_SESSION["mensagem"] = "Categoria não encontrada";
                 $_SESSION["tipo"] = "erro";
                 header("Location: /staysharp/categorias");
@@ -126,24 +110,15 @@
             }
 
             //impede excluir categoria que possui produtos
-            foreach ($_SESSION["produtos"] as $produto) {
-                if ($produto["categoria_id"] == $id) {
-                    $_SESSION["mensagem"] = "Não é possível excluir: existem produtos nesta categoria";
-                    $_SESSION["tipo"] = "erro";
-                    header("Location: /staysharp/categorias");
-                    exit;
-                }
+            if ($this->service->contarProdutos($id) > 0) {
+                $_SESSION["mensagem"] = "Não é possível excluir: existem produtos nesta categoria";
+                $_SESSION["tipo"] = "erro";
+                header("Location: /staysharp/categorias");
+                exit;
             }
 
             //remove a categoria da sessão
-            $_SESSION["categorias"] = array_filter(
-                $_SESSION["categorias"],
-                function ($c) use ($id) {
-                    return $c["id"] != $id;
-                }
-            );
-
-            $_SESSION["categorias"] = array_values($_SESSION["categorias"]);
+            $this->service->excluir($id);
 
             $_SESSION["mensagem"] = "Categoria excluída";
             $_SESSION["tipo"] = "sucesso";
@@ -151,10 +126,10 @@
             exit;
         }
 
-        // apis 
+        // apis
         public function list(): string {
             header("Content-Type: application/json; charset=UTF-8");
-            return json_encode($_SESSION["categorias"], JSON_UNESCAPED_UNICODE);
+            return json_encode($this->service->listar(), JSON_UNESCAPED_UNICODE);
         }
 
         public function apiCreate(): string {
@@ -169,13 +144,9 @@
                 ], JSON_UNESCAPED_UNICODE);
             }
 
-            $categoria = [
-                "id" => proximoId($_SESSION["categorias"]),
-                "nome" => trim($_POST["nome"])
-            ];
-
             //salva a nova categoria na sessão
-            $_SESSION["categorias"][] = $categoria;
+            $id = $this->service->criar(trim($_POST["nome"]));
+            $categoria = $this->service->buscarPorId($id);
 
             http_response_code(201);
             return json_encode($categoria, JSON_UNESCAPED_UNICODE);
@@ -185,17 +156,10 @@
             //informa que a resposta será em json
             header("Content-Type: application/json; charset=UTF-8");
 
-            $id = $_POST["id"] ?? 0;
-            $categoriaExiste = false;
+            $id = (int) ($_POST["id"] ?? 0);
 
             //verifica se a categoria existe
-            foreach ($_SESSION["categorias"] as $categoria) {
-                if ($categoria["id"] == $id) {
-                    $categoriaExiste = true;
-                }
-            }
-
-            if (!$categoriaExiste) {
+            if ($this->service->buscarPorId($id) === null) {
                 http_response_code(404);
                 return json_encode([
                     "erro" => "Categoria não encontrada"
@@ -203,24 +167,15 @@
             }
 
             //impede excluir categoria que possui produtos
-            foreach ($_SESSION["produtos"] as $produto) {
-                if ($produto["categoria_id"] == $id) {
-                    http_response_code(400);
-                    return json_encode([
-                        "erro" => "Não é possível excluir: existem produtos nesta categoria"
-                    ], JSON_UNESCAPED_UNICODE);
-                }
+            if ($this->service->contarProdutos($id) > 0) {
+                http_response_code(400);
+                return json_encode([
+                    "erro" => "Não é possível excluir: existem produtos nesta categoria"
+                ], JSON_UNESCAPED_UNICODE);
             }
 
             //remove a categoria da sessão
-            $_SESSION["categorias"] = array_filter(
-                $_SESSION["categorias"],
-                function ($categoria) use ($id) {
-                    return $categoria["id"] != $id;
-                }
-            );
-
-            $_SESSION["categorias"] = array_values($_SESSION["categorias"]);
+            $this->service->excluir($id);
 
             return json_encode([
                 "mensagem" => "Excluído"
