@@ -32,7 +32,7 @@
             //pega o id da categoria pela url
             $id = (int) ($_GET["id"] ?? 0);
 
-            //procura a categoria na sessão
+            //procura a categoria no banco
             $categoria = $this->service->buscarPorId($id);
 
             //volta para a lista caso não encontre
@@ -62,7 +62,7 @@
 
             $nome = trim($_POST["nome"]);
 
-            //adiciona a categoria na sessão
+            //adiciona a categoria no banco
             $this->service->criar($nome);
 
             $_SESSION["mensagem"] = "Categoria cadastrada com sucesso";
@@ -74,7 +74,7 @@
         public function update(): string {
             $id = (int) ($_POST["id"] ?? 0);
 
-            //procura a posição da categoria na sessão
+            //verifica se a categoria existe no banco
             if ($this->service->buscarPorId($id) === null) {
                 $_SESSION["mensagem"] = "Categoria não encontrada";
                 $_SESSION["tipo"] = "erro";
@@ -117,7 +117,7 @@
                 exit;
             }
 
-            //remove a categoria da sessão
+            //remove a categoria do banco
             $this->service->excluir($id);
 
             $_SESSION["mensagem"] = "Categoria excluída";
@@ -144,7 +144,7 @@
                 ], JSON_UNESCAPED_UNICODE);
             }
 
-            //salva a nova categoria na sessão
+            //salva a nova categoria no banco
             $id = $this->service->criar(trim($_POST["nome"]));
             $categoria = $this->service->buscarPorId($id);
 
@@ -174,7 +174,7 @@
                 ], JSON_UNESCAPED_UNICODE);
             }
 
-            //remove a categoria da sessão
+            //remove a categoria do banco
             $this->service->excluir($id);
 
             return json_encode([

@@ -87,7 +87,7 @@
             //pega o id do produto pela url
             $id = (int) ($_GET["id"] ?? 0);
 
-            //procura o produto na sessão
+            //procura o produto no banco
             $produto = $this->service->buscarPorId($id);
 
             if ($produto === null) {
@@ -201,7 +201,7 @@
             $imagem = $this->enviarImagem("imagem", "", $voltar);
             $imagemVerso = $this->enviarImagem("imagem_verso", "", $voltar);
 
-            //adiciona o produto na sessão
+            //adiciona o produto no banco
             $this->service->criar(
                 trim($_POST["nome"]),
                 trim($_POST["descricao"] ?? ""),
@@ -220,7 +220,7 @@
         public function update(): string {
             $id = (int) ($_POST["id"] ?? 0);
 
-            //procura a posição do produto na sessão
+            //procura o produto atual no banco
             $produtoAtual = $this->service->buscarPorId($id);
 
             if ($produtoAtual === null) {
@@ -270,7 +270,7 @@
                 $imagemVerso = "";
             }
 
-            //atualiza os dados do produto na sessão
+            //atualiza os dados do produto no banco
             $this->service->atualizar(
                 $id,
                 trim($_POST["nome"]),
@@ -300,7 +300,7 @@
                 exit;
             }
 
-            //remove o produto da sessão
+            //remove o produto do banco
             $this->service->excluir($id);
 
             $_SESSION["mensagem"] = "Produto excluído";
@@ -380,7 +380,7 @@
                 ], JSON_UNESCAPED_UNICODE);
             }
 
-            //salva o produto na sessão
+            //salva o produto no banco
             $id = $this->service->criar(
                 trim($_POST["nome"]),
                 trim($_POST["descricao"] ?? ""),
@@ -411,7 +411,7 @@
                 ], JSON_UNESCAPED_UNICODE);
             }
 
-            //remove o produto da sessão
+            //remove o produto do banco
             $this->service->excluir($id);
 
             return json_encode([
