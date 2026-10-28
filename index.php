@@ -9,19 +9,13 @@
         $_ENV[trim($chave)] = trim($valor);
     }
 
-    // funções de apoio 
-    require_once __DIR__ . "/app/Data/funcoes.php";
-
     // chamar as classes
     use App\Controllers\HomeController;
     use App\Controllers\CategoriaController;
     use App\Controllers\ProdutoController;
 
-    // fake db: só carrega o seed se a session ainda estiver vazia
+    //mantem a sessao para as mensagens
     session_start();
-    if (!isset($_SESSION["produtos"])) {
-        require __DIR__ . "/app/Data/seed.php";
-    }
 
     // pasta base do projeto 
     $basedir = "/staysharp";
@@ -53,16 +47,6 @@
         // home
         if ($uri === "/") {
             echo (new HomeController())->index();
-            exit;
-        }
-
-        // utilitário: reiniciar os dados
-        if ($uri === "/reset") {
-            session_unset();
-            require __DIR__ . "/app/Data/seed.php";
-            $_SESSION["mensagem"] = "Dados reiniciados";
-            $_SESSION["tipo"] = "sucesso";
-            header("Location: /staysharp/");
             exit;
         }
 
