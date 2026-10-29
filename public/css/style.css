@@ -946,3 +946,353 @@ p:has(> .btn) {
     filter: brightness(1.7) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7));
     pointer-events: none;
 }
+
+.tamanhos {
+    margin: 1rem 0;
+}
+
+.tamanhos-titulo {
+    display: block;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: .5rem;
+}
+
+.tamanhos-lista {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.tamanho {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 3.5rem;
+    padding: .5rem .75rem;
+    border: 2px solid #111;
+    border-radius: 6px;
+    color: #111;
+    background: #fff;
+    text-decoration: none;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.tamanho small {
+    font-weight: 400;
+    font-size: .7rem;
+    opacity: .7;
+}
+
+.tamanho:hover {
+    background: #f1f1f1;
+}
+
+.tamanho.ativo {
+    background: #111;
+    color: #fff;
+}
+
+.tamanho.esgotado {
+    border-color: #ccc;
+    color: #aaa;
+    text-decoration: line-through;
+    cursor: not-allowed;
+}
+
+.btn-desativado {
+    background: #ccc;
+    color: #666;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.selo-esgotado {
+    display: inline-block;
+    margin-left: .25rem;
+    padding: .1rem .5rem;
+    border-radius: 4px;
+    background: #c62828;
+    color: #fff;
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* ===== editor de produto: formulário + prévia do anúncio ===== */
+.editor-produto {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 28px;
+    align-items: start;
+}
+
+.editor-produto [hidden] {
+    display: none !important;
+}
+
+.editor-produto .formulario {
+    max-width: none;
+}
+
+.formulario label > span {
+    display: block;
+}
+
+.obrigatorio {
+    color: var(--destaque);
+}
+
+.aviso-obrigatorio {
+    margin: 0;
+    font-size: 13px;
+    color: var(--cinza);
+}
+
+.formulario input:required:invalid:not(:placeholder-shown),
+.formulario select:required:invalid:focus {
+    border-color: var(--destaque);
+}
+
+.formulario input:focus,
+.formulario select:focus,
+.formulario textarea:focus {
+    outline: 2px solid var(--preto);
+    outline-offset: 1px;
+}
+
+.linha-campos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.fotos {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.fotos-titulo {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.fotos-grade {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.foto-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 14px;
+}
+
+.formulario .upload {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    border: 2px dashed var(--cinza);
+    border-radius: var(--raio);
+    background: var(--fundo);
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.formulario .upload:hover,
+.formulario .upload:focus-within {
+    border-color: var(--preto);
+    background: var(--cinza-claro);
+}
+
+/* o input fica por cima, invisível: clicar em qualquer parte da caixa abre o seletor */
+.formulario .upload input[type="file"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    opacity: 0;
+    cursor: pointer;
+    border: 0;
+    outline: none;
+}
+
+.upload-previa {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.upload-vazio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: normal;
+    color: var(--cinza-escuro);
+}
+
+.upload-trocar {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    padding: 6px;
+    border-radius: var(--raio);
+    background: rgba(0, 0, 0, 0.7);
+    color: var(--branco);
+    font-size: 12px;
+    font-weight: normal;
+    text-align: center;
+}
+
+.form-botoes {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.form-botoes .btn[type="submit"] {
+    flex: 1;
+}
+
+/* espelho do anúncio */
+.espelho {
+    position: sticky;
+    top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.espelho-titulo {
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--cinza);
+}
+
+.espelho small {
+    color: var(--cinza);
+}
+
+.espelho .card-produto {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+}
+
+.espelho-sem-foto {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cinza);
+    font-size: 14px;
+}
+
+.espelho-descricao {
+    margin: 0;
+    font-size: 13px;
+    color: var(--cinza-escuro);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+
+.espelho-descricao:empty {
+    display: none;
+}
+
+.espelho .acoes .btn {
+    pointer-events: none;
+}
+
+@media (max-width: 860px) {
+    .editor-produto {
+        grid-template-columns: 1fr;
+    }
+
+    .espelho {
+        position: static;
+        order: -1;
+        max-width: 320px;
+    }
+}
+
+@media (max-width: 480px) {
+    .linha-campos {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* abas da prévia */
+.espelho-abas {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--cinza-claro);
+    border-radius: var(--raio);
+}
+
+.espelho-abas .aba {
+    flex: 1;
+    padding: 8px 6px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    color: var(--cinza-escuro);
+    cursor: pointer;
+}
+
+.espelho-abas .aba.ativa {
+    background: var(--branco);
+    color: var(--preto);
+    font-weight: bold;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.espelho-detalhe-nome {
+    margin: 0;
+    font-size: 22px;
+}
+
+.espelho-detalhe .tamanhos {
+    margin: 4px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.espelho-detalhe .tamanhos-titulo {
+    margin: 0;
+    font-size: 13px;
+}
+
+.espelho-detalhe .acoes {
+    padding-top: 4px;
+}
+
+@media (max-width: 860px) {
+    .espelho {
+        max-width: 340px;
+    }
+}

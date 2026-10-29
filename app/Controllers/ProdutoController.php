@@ -3,14 +3,17 @@
     use App\Views\Render;
     use App\Models\ProdutoModel;
     use App\Models\CategoriaModel;
+    use App\Models\TamanhoModel;
 
     class ProdutoController {
         private ProdutoModel $model;
         private CategoriaModel $categoriaModel;
+        private TamanhoModel $tamanhoModel;
 
         public function __construct() {
             $this->model = new ProdutoModel();
             $this->categoriaModel = new CategoriaModel();
+            $this->tamanhoModel = new TamanhoModel();
         }
 
         // telas
@@ -22,6 +25,11 @@
 
             //montar o a lista com os produtos que veio do filtro
             $produtos = $this->model->listar($categoria, $busca);
+
+            // soma o estoque de todos os tamanhos (0 = esgotado)
+            foreach ($produtos as $i => $p) {
+                $produtos[$i]["estoque_total"] = $this->tamanhoModel->estoqueTotal($p["id"]);
+            }
 
             // relacionamento: [1 => "Camisas", 2 => "Bonés", 3 => "Adesivos"]
             $nomesCategorias = array_column($categorias, "nome", "id");
@@ -59,17 +67,35 @@
             // relacionamento
             $nomeCategoria = $produto["categoria_nome"] ?? "Sem categoria";
 
+            // tamanhos do produto (relacionamento produto -> tamanhos)
+            $tamanhos = $this->tamanhoModel->listarPorProduto($id);
+            $esgotado = $this->tamanhoModel->estoqueTotal($id) === 0;
+
+            // tamanho escolhido pela URL (/produto?id=1&tamanho=M)
+            // só vale se existir nesse produto e tiver estoque
+            $tamanhoEscolhido = $_GET["tamanho"] ?? "";
+            $tamanhoValido = false;
+            foreach ($tamanhos as $t) {
+                if ($t["tamanho"] === $tamanhoEscolhido && $t["estoque"] > 0) {
+                    $tamanhoValido = true;
+                }
+            }
+            if (!$tamanhoValido) {
+                $tamanhoEscolhido = "";
+            }
+
                        // pedido pelo WhatsApp: número da loja com 55 + DDD + número, só dígitos
             $whatsapp = "18997069289";
             $mensagem = "Olá! Quero fazer um pedido:\n"
                       . $produto["nome"] . "\n"
+                      . "Tamanho: " . $tamanhoEscolhido . "\n"
                       . "Valor: R$ " . number_format($produto["preco"], 2, ",", ".");
             $linkWhatsapp = "https://wa.me/" . $whatsapp . "?text=" . rawurlencode($mensagem);
 
             $titulo = $produto["nome"];
             return (new Render())->render(
                 'produtos/detalhe',
-                compact('titulo', 'produto', 'nomeCategoria', 'linkWhatsapp')
+                compact('titulo', 'produto', 'nomeCategoria', 'linkWhatsapp', 'tamanhos', 'tamanhoEscolhido', 'esgotado')
             );
         }
 
@@ -198,6 +224,15 @@
             }
 
             $voltar = "/staysharp/produtos/cadastrar";
+
+            //a foto de frente é obrigatória no cadastro
+            if (!isset($_FILES["imagem"]) || $_FILES["imagem"]["error"] === UPLOAD_ERR_NO_FILE) {
+                $_SESSION["mensagem"] = "Envie a foto de frente do produto";
+                $_SESSION["tipo"] = "erro";
+                header("Location: $voltar");
+                exit;
+            }
+
             $imagem = $this->enviarImagem("imagem", "", $voltar);
             $imagemVerso = $this->enviarImagem("imagem_verso", "", $voltar);
 
@@ -338,6 +373,9 @@
                     "erro" => "Produto não encontrado"
                 ], JSON_UNESCAPED_UNICODE);
             }
+
+            // junta a lista de tamanhos do produto
+            $produtoEncontrado["tamanhos"] = $this->tamanhoModel->listarPorProduto($id);
 
             return json_encode($produtoEncontrado, JSON_UNESCAPED_UNICODE);
         }
