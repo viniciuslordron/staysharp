@@ -1,27 +1,27 @@
 <?php
     namespace App\Controllers;
     use App\Views\Render;
-    use App\Services\ProdutoService;
-    use App\Services\CategoriaService;
+    use App\Models\ProdutoModel;
+    use App\Models\CategoriaModel;
 
     class ProdutoController {
-        private ProdutoService $service;
-        private CategoriaService $categoriaService;
+        private ProdutoModel $model;
+        private CategoriaModel $categoriaModel;
 
         public function __construct() {
-            $this->service = new ProdutoService();
-            $this->categoriaService = new CategoriaService();
+            $this->model = new ProdutoModel();
+            $this->categoriaModel = new CategoriaModel();
         }
 
         // telas
         public function index(): string {
-            $categorias = $this->categoriaService->listar();
+            $categorias = $this->categoriaModel->listar();
 
             $categoria = $_GET["categoria"] ?? "";
             $busca = trim ($_GET["busca"] ?? "");
 
             //montar o a lista com os produtos que veio do filtro
-            $produtos = $this->service->listar($categoria, $busca);
+            $produtos = $this->model->listar($categoria, $busca);
 
             // relacionamento: [1 => "Camisas", 2 => "Bonés", 3 => "Adesivos"]
             $nomesCategorias = array_column($categorias, "nome", "id");
@@ -44,7 +44,7 @@
             $id = (int) ($_GET["id"] ?? 0);
 
             // procura o produto com esse id
-            $produto = $this->service->buscarPorId($id);
+            $produto = $this->model->buscarPorId($id);
 
             // caso n exista produto
             if ($produto === null) {
@@ -75,7 +75,7 @@
 
         public function criar(): string {
             $titulo = "Novo Produto";
-            $categorias = $this->categoriaService->listar();
+            $categorias = $this->categoriaModel->listar();
 
             return (new Render())->render(
                 'produtos/criar',
@@ -88,7 +88,7 @@
             $id = (int) ($_GET["id"] ?? 0);
 
             //procura o produto no banco
-            $produto = $this->service->buscarPorId($id);
+            $produto = $this->model->buscarPorId($id);
 
             if ($produto === null) {
                 $_SESSION["mensagem"] = "Produto não encontrado";
@@ -98,7 +98,7 @@
             }
 
             $titulo = "Editar Produto";
-            $categorias = $this->categoriaService->listar();
+            $categorias = $this->categoriaModel->listar();
 
             return (new Render())->render(
                 'produtos/criar',
@@ -188,7 +188,7 @@
             $categoria_id = (int) $_POST["categoria_id"];
 
             //verifica se a categoria escolhida existe
-            $categoriaExiste = $this->categoriaService->buscarPorId($categoria_id) !== null;
+            $categoriaExiste = $this->categoriaModel->buscarPorId($categoria_id) !== null;
 
             if (!$categoriaExiste) {
                 $_SESSION["mensagem"] = "Categoria não encontrada";
@@ -202,7 +202,7 @@
             $imagemVerso = $this->enviarImagem("imagem_verso", "", $voltar);
 
             //adiciona o produto no banco
-            $this->service->criar(
+            $this->model->criar(
                 trim($_POST["nome"]),
                 trim($_POST["descricao"] ?? ""),
                 (float) $_POST["preco"],
@@ -221,7 +221,7 @@
             $id = (int) ($_POST["id"] ?? 0);
 
             //procura o produto atual no banco
-            $produtoAtual = $this->service->buscarPorId($id);
+            $produtoAtual = $this->model->buscarPorId($id);
 
             if ($produtoAtual === null) {
                 $_SESSION["mensagem"] = "Produto não encontrado";
@@ -252,7 +252,7 @@
             }
 
             $categoria_id = (int) $_POST["categoria_id"];
-            $categoriaExiste = $this->categoriaService->buscarPorId($categoria_id) !== null;
+            $categoriaExiste = $this->categoriaModel->buscarPorId($categoria_id) !== null;
 
             if (!$categoriaExiste) {
                 $_SESSION["mensagem"] = "Categoria não encontrada";
@@ -271,7 +271,7 @@
             }
 
             //atualiza os dados do produto no banco
-            $this->service->atualizar(
+            $this->model->atualizar(
                 $id,
                 trim($_POST["nome"]),
                 trim($_POST["descricao"] ?? ""),
@@ -291,7 +291,7 @@
             $id = (int) ($_POST["id"] ?? 0);
 
             //verifica se o produto existe
-            $produtoExiste = $this->service->buscarPorId($id) !== null;
+            $produtoExiste = $this->model->buscarPorId($id) !== null;
 
             if (!$produtoExiste) {
                 $_SESSION["mensagem"] = "Produto não encontrado";
@@ -301,7 +301,7 @@
             }
 
             //remove o produto do banco
-            $this->service->excluir($id);
+            $this->model->excluir($id);
 
             $_SESSION["mensagem"] = "Produto excluído";
             $_SESSION["tipo"] = "sucesso";
@@ -318,7 +318,7 @@
             $busca = trim($_GET["busca"] ?? "");
 
             //filtra os produtos pela categoria e pela busca
-            $produtos = $this->service->listar($categoria, $busca);
+            $produtos = $this->model->listar($categoria, $busca);
 
             return json_encode($produtos, JSON_UNESCAPED_UNICODE);
         }
@@ -330,7 +330,7 @@
             $id = (int) ($_GET["id"] ?? 0);
 
             //procura o produto pelo id
-            $produtoEncontrado = $this->service->buscarPorId($id);
+            $produtoEncontrado = $this->model->buscarPorId($id);
 
             if ($produtoEncontrado === null) {
                 http_response_code(404);
@@ -371,7 +371,7 @@
             $categoria_id = (int) $_POST["categoria_id"];
 
             //verifica se a categoria existe
-            $categoriaExiste = $this->categoriaService->buscarPorId($categoria_id) !== null;
+            $categoriaExiste = $this->categoriaModel->buscarPorId($categoria_id) !== null;
 
             if (!$categoriaExiste) {
                 http_response_code(400);
@@ -381,7 +381,7 @@
             }
 
             //salva o produto no banco
-            $id = $this->service->criar(
+            $id = $this->model->criar(
                 trim($_POST["nome"]),
                 trim($_POST["descricao"] ?? ""),
                 (float) $_POST["preco"],
@@ -389,7 +389,7 @@
                 trim($_POST["imagem"] ?? ""),
                 trim($_POST["imagem_verso"] ?? "")
             );
-            $produto = $this->service->buscarPorId($id);
+            $produto = $this->model->buscarPorId($id);
 
             http_response_code(201);
             return json_encode($produto, JSON_UNESCAPED_UNICODE);
@@ -402,7 +402,7 @@
             $id = (int) ($_POST["id"] ?? 0);
 
             //verifica se o produto existe
-            $produtoExiste = $this->service->buscarPorId($id) !== null;
+            $produtoExiste = $this->model->buscarPorId($id) !== null;
 
             if (!$produtoExiste) {
                 http_response_code(404);
@@ -412,7 +412,7 @@
             }
 
             //remove o produto do banco
-            $this->service->excluir($id);
+            $this->model->excluir($id);
 
             return json_encode([
                 "mensagem" => "Excluído"

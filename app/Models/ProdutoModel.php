@@ -1,10 +1,10 @@
 <?php
-    namespace App\Services;
+    namespace App\Models;
 
     use App\Config\Database;
     use PDO;
 
-    class ProdutoService {
+    class ProdutoModel {
         private PDO $db;
 
         public function __construct() {

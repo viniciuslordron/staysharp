@@ -35,22 +35,20 @@ https://github.com/viniciuslordron/staysharp
    composer install
    ```
 3. Inicie o **Apache** e o **MySQL** no painel do XAMPP.
-4. Abra **http://localhost/phpmyadmin/** e importe o `schema.sql` na aba **Importar**. Ele cria o banco `staysharp` com charset `utf8mb4`, as tabelas e a chave estrangeira.
-5. Selecione o banco `staysharp` e importe o `seed.sql` para carregar 3 categorias e 6 produtos de exemplo. Importe os scripts uma vez, em uma instalação nova. Se já possui dados, não é necessário importá-los novamente.
-6. Copie o arquivo de configuração no terminal:
-   ```powershell
-   Copy-Item .env.example .env
+4. Abra **http://localhost/phpmyadmin/** e importe o `database/schema.sql` na aba **Importar**. Ele cria o banco `staysharp` com charset `utf8mb4`, as tabelas e a chave estrangeira.
+5. Selecione o banco `staysharp` e importe o `database/seed.sql` para carregar 3 categorias e 6 produtos de exemplo. Importe os scripts uma vez, em uma instalação nova. Se já possui dados, não é necessário importá-los novamente.
+6. Confira as configurações de conexão no arquivo `config.php`, na raiz do projeto, conforme seu MySQL local:
+   ```php
+   return [
+       'host' => '127.0.0.1',
+       'db' => 'staysharp',
+       'user' => 'root',
+       'pass' => '',
+       'charset' => 'utf8mb4'
+   ];
    ```
-7. Confira as configurações do `.env` conforme seu MySQL local:
-   ```dotenv
-   DB_HOST=127.0.0.1
-   DB_NAME=staysharp
-   DB_USER=root
-   DB_PASSWORD=
-   DB_CHARSET=utf8mb4
-   ```
-   Se o usuário do banco tiver senha, preencha `DB_PASSWORD`. O `.env` é local e está no `.gitignore`; somente `.env.example` vai para o Git.
-8. Acesse: **http://localhost/staysharp/**
+   Se o usuário do banco tiver senha, preencha `pass`.
+7. Acesse: **http://localhost/staysharp/**
 
 > O `mod_rewrite` do Apache precisa estar ativo, porque o `.htaccess` manda todas as rotas para o `index.php`.
 
@@ -61,13 +59,14 @@ staysharp/
 ├── index.php              # roteador: lê a URL e chama o controller
 ├── .htaccess              # redireciona tudo para o index.php
 ├── composer.json          # autoload PSR-4 (App\ -> app/)
-├── .env.example           # exemplo das configurações locais
-├── schema.sql             # criação do banco, tabelas e FK
-├── seed.sql               # dados de exemplo
+├── config.php             # configurações de conexão com o banco
+├── database/
+│   ├── schema.sql         # criação do banco, tabelas e FK
+│   └── seed.sql           # dados de exemplo
 ├── app/
 │   ├── Config/            # Database.php (conexão PDO)
 │   ├── Controllers/       # HomeController, CategoriaController, ProdutoController
-│   ├── Services/          # CategoriaService e ProdutoService (SQL)
+│   ├── Models/            # CategoriaModel e ProdutoModel (acesso a dados, SQL)
 │   └── Views/             # render.php, layout.php e as telas
 │       ├── home/
 │       ├── categorias/
@@ -120,16 +119,16 @@ As APIs respondem com os códigos **200** (ok), **201** (criado), **400** (dado 
 
 ## Banco de dados MySQL + PDO
 
-Os dados ficam no banco `staysharp`. A classe `app/Config/Database.php` recebe as configurações carregadas do `.env` no `index.php` e cria uma conexão PDO, seguindo a aula 9.
+Os dados ficam no banco `staysharp`. A classe `app/Config/Database.php` lê as configurações do `config.php` da raiz e cria uma conexão PDO, seguindo a aula 9.
 
 - `categorias`: `id`, `nome`.
 - `produtos`: `id`, `nome`, `descricao`, `preco`, `categoria_id`, `imagem`, `imagem_verso`.
 
 O `categoria_id` é uma chave estrangeira que aponta para `categorias.id`. Os IDs são gerados pelo `AUTO_INCREMENT`.
 
-Os Services executam o CRUD com `prepare()` e `execute()`. O `ProdutoService` usa `JOIN` para consultar o nome da categoria junto com o produto. Os controllers mantêm as mesmas rotas e views da primeira etapa, incluindo a página inicial.
+Os Models executam o CRUD com `prepare()` e `execute()`. O `ProdutoModel` usa `JOIN` para consultar o nome da categoria junto com o produto. Os controllers mantêm as mesmas rotas e views da primeira etapa, incluindo a página inicial.
 
-Os produtos e categorias continuam salvos depois de fechar o navegador. A sessão permanece apenas para as mensagens de sucesso e erro. O carregamento do seed em PHP, a função `proximoId()` e a rota `/reset` foram removidos; os dados iniciais vêm do `seed.sql`.
+Os produtos e categorias continuam salvos depois de fechar o navegador. A sessão permanece apenas para as mensagens de sucesso e erro. O carregamento do seed em PHP, a função `proximoId()` e a rota `/reset` foram removidos; os dados iniciais vêm do `database/seed.sql`.
 
 As imagens enviadas pelo formulário ficam em `public/img/produtos/`. O banco guarda os caminhos das imagens de frente e verso.
 

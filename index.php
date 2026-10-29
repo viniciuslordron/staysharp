@@ -2,13 +2,6 @@
     // autoload do composer 
     require_once __DIR__ . "/vendor/autoload.php";
 
-    //carrega as variaveis do .env
-    foreach (file(__DIR__ . "/.env", FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $linha) {
-        if (str_starts_with(trim($linha), "#")) continue;
-        [$chave, $valor] = explode("=", $linha, 2);
-        $_ENV[trim($chave)] = trim($valor);
-    }
-
     // chamar as classes
     use App\Controllers\HomeController;
     use App\Controllers\CategoriaController;

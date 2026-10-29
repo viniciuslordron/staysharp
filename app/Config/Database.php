@@ -12,12 +12,13 @@ class Database {
         //reutiliza a conexao se ja existir
         if (self::$conn) return self::$conn;
 
-        //pega as configuracoes do banco
-        $host = $_ENV['DB_HOST'];
-        $dbname = $_ENV['DB_NAME'];
-        $user = $_ENV['DB_USER'];
-        $password = $_ENV['DB_PASSWORD'];
-        $charset = $_ENV['DB_CHARSET'];
+        //pega as configuracoes do banco no config.php da raiz
+        $config = require __DIR__ . '/../../config.php';
+        $host = $config['host'];
+        $dbname = $config['db'];
+        $user = $config['user'];
+        $password = $config['pass'];
+        $charset = $config['charset'];
 
         //string de conexao
         $dns = "mysql:host=$host;dbname=$dbname;charset=$charset";

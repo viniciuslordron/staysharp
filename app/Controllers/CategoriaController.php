@@ -1,19 +1,19 @@
 <?php
     namespace App\Controllers;
     use App\Views\Render;
-    use App\Services\CategoriaService;
+    use App\Models\CategoriaModel;
 
     class CategoriaController {
-        private CategoriaService $service;
+        private CategoriaModel $model;
 
         public function __construct() {
-            $this->service = new CategoriaService();
+            $this->model = new CategoriaModel();
         }
 
         // ===== telas =====
         public function index(): string {
             $titulo = "Categorias";
-            $categorias = $this->service->listar();
+            $categorias = $this->model->listar();
             return (new Render())->render(
                 'categorias/index',
                 compact('titulo', 'categorias')
@@ -33,7 +33,7 @@
             $id = (int) ($_GET["id"] ?? 0);
 
             //procura a categoria no banco
-            $categoria = $this->service->buscarPorId($id);
+            $categoria = $this->model->buscarPorId($id);
 
             //volta para a lista caso não encontre
             if ($categoria === null) {
@@ -63,7 +63,7 @@
             $nome = trim($_POST["nome"]);
 
             //adiciona a categoria no banco
-            $this->service->criar($nome);
+            $this->model->criar($nome);
 
             $_SESSION["mensagem"] = "Categoria cadastrada com sucesso";
             $_SESSION["tipo"] = "sucesso";
@@ -75,7 +75,7 @@
             $id = (int) ($_POST["id"] ?? 0);
 
             //verifica se a categoria existe no banco
-            if ($this->service->buscarPorId($id) === null) {
+            if ($this->model->buscarPorId($id) === null) {
                 $_SESSION["mensagem"] = "Categoria não encontrada";
                 $_SESSION["tipo"] = "erro";
                 header("Location: /staysharp/categorias");
@@ -90,7 +90,7 @@
             }
 
             //atualiza o nome da categoria
-            $this->service->atualizar($id, trim($_POST["nome"]));
+            $this->model->atualizar($id, trim($_POST["nome"]));
 
             $_SESSION["mensagem"] = "Categoria atualizada";
             $_SESSION["tipo"] = "sucesso";
@@ -102,7 +102,7 @@
             $id = (int) ($_POST["id"] ?? 0);
 
             //verifica se a categoria existe
-            if ($this->service->buscarPorId($id) === null) {
+            if ($this->model->buscarPorId($id) === null) {
                 $_SESSION["mensagem"] = "Categoria não encontrada";
                 $_SESSION["tipo"] = "erro";
                 header("Location: /staysharp/categorias");
@@ -110,7 +110,7 @@
             }
 
             //impede excluir categoria que possui produtos
-            if ($this->service->contarProdutos($id) > 0) {
+            if ($this->model->contarProdutos($id) > 0) {
                 $_SESSION["mensagem"] = "Não é possível excluir: existem produtos nesta categoria";
                 $_SESSION["tipo"] = "erro";
                 header("Location: /staysharp/categorias");
@@ -118,7 +118,7 @@
             }
 
             //remove a categoria do banco
-            $this->service->excluir($id);
+            $this->model->excluir($id);
 
             $_SESSION["mensagem"] = "Categoria excluída";
             $_SESSION["tipo"] = "sucesso";
@@ -129,7 +129,7 @@
         // apis
         public function list(): string {
             header("Content-Type: application/json; charset=UTF-8");
-            return json_encode($this->service->listar(), JSON_UNESCAPED_UNICODE);
+            return json_encode($this->model->listar(), JSON_UNESCAPED_UNICODE);
         }
 
         public function apiCreate(): string {
@@ -145,8 +145,8 @@
             }
 
             //salva a nova categoria no banco
-            $id = $this->service->criar(trim($_POST["nome"]));
-            $categoria = $this->service->buscarPorId($id);
+            $id = $this->model->criar(trim($_POST["nome"]));
+            $categoria = $this->model->buscarPorId($id);
 
             http_response_code(201);
             return json_encode($categoria, JSON_UNESCAPED_UNICODE);
@@ -159,7 +159,7 @@
             $id = (int) ($_POST["id"] ?? 0);
 
             //verifica se a categoria existe
-            if ($this->service->buscarPorId($id) === null) {
+            if ($this->model->buscarPorId($id) === null) {
                 http_response_code(404);
                 return json_encode([
                     "erro" => "Categoria não encontrada"
@@ -167,7 +167,7 @@
             }
 
             //impede excluir categoria que possui produtos
-            if ($this->service->contarProdutos($id) > 0) {
+            if ($this->model->contarProdutos($id) > 0) {
                 http_response_code(400);
                 return json_encode([
                     "erro" => "Não é possível excluir: existem produtos nesta categoria"
@@ -175,7 +175,7 @@
             }
 
             //remove a categoria do banco
-            $this->service->excluir($id);
+            $this->model->excluir($id);
 
             return json_encode([
                 "mensagem" => "Excluído"
