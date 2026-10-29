@@ -29,8 +29,40 @@
             <p class="preco">R$ <?= number_format($produto["preco"], 2, ",", ".") ?></p>
             <p><?= $produto["descricao"] ?></p>
 
+            <!-- tamanhos do produto -->
+            <div class="tamanhos">
+                <span class="tamanhos-titulo">Tamanho</span>
+
+                <?php if (count($tamanhos) === 0): ?>
+                    <p>Nenhum tamanho cadastrado.</p>
+                <?php else: ?>
+                    <div class="tamanhos-lista">
+                        <?php foreach ($tamanhos as $t): ?>
+                            <?php if ($t["estoque"] <= 0): ?>
+                                <span class="tamanho esgotado" title="Esgotado">
+                                    <?= htmlspecialchars($t["tamanho"]) ?>
+                                    <small>Esgotado</small>
+                                </span>
+                            <?php else: ?>
+                                <a class="tamanho <?= $t["tamanho"] === $tamanhoEscolhido ? "ativo" : "" ?>"
+                                   href="/staysharp/produto?id=<?= $produto["id"] ?>&tamanho=<?= urlencode($t["tamanho"]) ?>">
+                                    <?= htmlspecialchars($t["tamanho"]) ?>
+                                    <small><?= $t["estoque"] ?> un.</small>
+                                </a>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+
             <div class="acoes">
-                <a class="btn btn-whatsapp" href="<?= $linkWhatsapp ?>" target="_blank">Pedir pelo WhatsApp</a>
+                <?php if ($esgotado): ?>
+                    <span class="btn btn-desativado">Esgotado</span>
+                <?php elseif ($tamanhoEscolhido === ""): ?>
+                    <span class="btn btn-desativado">Escolha um tamanho</span>
+                <?php else: ?>
+                    <a class="btn btn-whatsapp" href="<?= $linkWhatsapp ?>" target="_blank">Pedir pelo WhatsApp (<?= htmlspecialchars($tamanhoEscolhido) ?>)</a>
+                <?php endif; ?>
                 <a class="btn btn-secundario" href="/staysharp/produtos/editar?id=<?= $produto["id"] ?>">Editar</a>
                 <a class="btn btn-secundario" href="/staysharp/produtos">Voltar para produtos</a>
             </div>

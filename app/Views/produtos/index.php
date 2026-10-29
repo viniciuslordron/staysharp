@@ -36,6 +36,9 @@
 
                 <div class="card-corpo">
                     <span class="categoria"><?= $nomesCategorias[$p["categoria_id"]] ?? "Sem categoria" ?></span>
+                    <?php if ($p["estoque_total"] === 0): ?>
+                        <span class="selo-esgotado">Esgotado</span>
+                    <?php endif; ?>
                     <h3><?= $p["nome"] ?></h3>
                     <span class="preco">R$ <?= number_format($p["preco"], 2, ",", ".") ?></span>
 

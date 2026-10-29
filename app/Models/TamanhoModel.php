@@ -1,12 +1,17 @@
 <?php
 
+namespace App\Models;
+
+use App\Config\Database;
+use PDO;
+
 class TamanhoModel
 {
     private $pdo;
 
-    public function __construct($pdo)
+    public function __construct($pdo = null)
     {
-        $this->pdo = $pdo;
+        $this->pdo = $pdo ?? Database::getConnection();
     }
 
     // Tamanhos de um produto
