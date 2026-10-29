@@ -1,27 +1,27 @@
 <?php 
     namespace App\Controllers;
     use App\Views\Render;
-    use App\Services\CategoriaService;
-    use App\Services\ProdutoService;
+    use App\Models\CategoriaModel;
+    use App\Models\ProdutoModel;
 
     class HomeController {
-        private CategoriaService $categoriaService;
-        private ProdutoService $produtoService;
+        private CategoriaModel $categoriaModel;
+        private ProdutoModel $produtoModel;
 
         public function __construct() {
-            $this->categoriaService = new CategoriaService();
-            $this->produtoService = new ProdutoService();
+            $this->categoriaModel = new CategoriaModel();
+            $this->produtoModel = new ProdutoModel();
         }
 
         public function index(): string {
             $titulo = "StaySharp";
 
             //busca as categorias no banco
-            $categorias = $this->categoriaService->listar();
+            $categorias = $this->categoriaModel->listar();
             $nomesCategorias = array_column($categorias, "nome", "id");
 
             //mostra os 4 primeiros produtos do banco
-            $destaques = array_slice($this->produtoService->listar(), 0, 4);
+            $destaques = array_slice($this->produtoModel->listar(), 0, 4);
 
             return (new Render()) -> render (
                 'home/index',
