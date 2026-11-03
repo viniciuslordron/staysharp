@@ -399,6 +399,22 @@ img {
     border: 1px solid var(--cinza-claro);
 }
 
+.tabela-relatorio {
+    table-layout: fixed;
+}
+
+.tabela-relatorio td {
+    overflow-wrap: anywhere;
+}
+
+.tabela-scroll {
+    overflow-x: auto;
+}
+
+.tabela-scroll .tabela-relatorio {
+    min-width: 650px;
+}
+
 .tabela th,
 .tabela td {
     padding: 12px;

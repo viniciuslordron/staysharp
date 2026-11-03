@@ -30,6 +30,7 @@
                 <?php if (isset($_SESSION["usuario"])): ?>
                 <a href="/staysharp/categorias">Categorias</a>
                 <a href="/staysharp/produtos/cadastrar">+ Produto</a>
+                <a href="/staysharp/relatorios">Relatórios</a>
                 <a href="/staysharp/logout">Sair (<?= htmlspecialchars($_SESSION["usuario"]["nome"]) ?>)</a>
                 <?php else: ?>
                 <a href="/staysharp/login">Entrar</a>
