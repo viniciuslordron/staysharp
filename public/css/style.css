@@ -947,6 +947,41 @@ p:has(> .btn) {
     pointer-events: none;
 }
 
+.gerenciar-tamanhos {
+    margin-top: 40px;
+    scroll-margin-top: 24px;
+}
+
+.estoque-form {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.estoque-form input[type="number"] {
+    width: 100px;
+    padding: 8px;
+}
+
+@media (max-width: 600px) {
+    .gerenciar-tamanhos .tabela {
+        table-layout: fixed;
+    }
+
+    .gerenciar-tamanhos .tabela th:first-child {
+        width: 23%;
+    }
+
+    .gerenciar-tamanhos .tabela th:last-child {
+        width: 30%;
+    }
+
+    .gerenciar-tamanhos .tabela td {
+        overflow-wrap: anywhere;
+    }
+}
+
 .tamanhos {
     margin: 1rem 0;
 }

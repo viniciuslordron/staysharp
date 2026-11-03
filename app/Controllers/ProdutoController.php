@@ -125,10 +125,12 @@
 
             $titulo = "Editar Produto";
             $categorias = $this->categoriaModel->listar();
+            //carrega os tamanhos para gerenciar o estoque na edição
+            $tamanhos = $this->tamanhoModel->listarPorProduto($id);
 
             return (new Render())->render(
                 'produtos/criar',
-                compact('titulo', 'categorias', 'produto')
+                compact('titulo', 'categorias', 'produto', 'tamanhos')
             );
         }
 
