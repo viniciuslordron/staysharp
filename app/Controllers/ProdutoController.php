@@ -1,5 +1,6 @@
 <?php
     namespace App\Controllers;
+    use PDOException;
     use App\Views\Render;
     use App\Models\ProdutoModel;
     use App\Models\CategoriaModel;
@@ -20,8 +21,8 @@
         public function index(): string {
             $categorias = $this->categoriaModel->listar();
 
-            $categoria = $_GET["categoria"] ?? "";
-            $busca = trim ($_GET["busca"] ?? "");
+            $categoria = is_string($_GET["categoria"] ?? null) ? $_GET["categoria"] : "";
+            $busca = is_string($_GET["busca"] ?? null) ? trim($_GET["busca"]) : "";
 
             //montar o a lista com os produtos que veio do filtro
             $produtos = $this->model->listar($categoria, $busca);
@@ -49,7 +50,7 @@
         }
 
         public function detalhe(): string {
-            $id = (int) ($_GET["id"] ?? 0);
+            $id = (filter_var($_GET["id"] ?? 0, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]) ?: 0);
 
             // procura o produto com esse id
             $produto = $this->model->buscarPorId($id);
@@ -73,7 +74,7 @@
 
             // tamanho escolhido pela URL (/produto?id=1&tamanho=M)
             // só vale se existir nesse produto e tiver estoque
-            $tamanhoEscolhido = $_GET["tamanho"] ?? "";
+            $tamanhoEscolhido = is_string($_GET["tamanho"] ?? null) ? $_GET["tamanho"] : "";
             $tamanhoValido = false;
             foreach ($tamanhos as $t) {
                 if ($t["tamanho"] === $tamanhoEscolhido && $t["estoque"] > 0) {
@@ -111,7 +112,7 @@
 
         public function editar(): string {
             //pega o id do produto pela url
-            $id = (int) ($_GET["id"] ?? 0);
+            $id = (filter_var($_GET["id"] ?? 0, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]) ?: 0);
 
             //procura o produto no banco
             $produto = $this->model->buscarPorId($id);
@@ -189,161 +190,170 @@
             return "produtos/$nome";
         }
 
+        //valida os mesmos dados nos formularios e na API
+        private function validarDados(): ?string {
+            if (!isset($_POST["nome"], $_POST["preco"], $_POST["categoria_id"])) {
+                return "Preencha os campos obrigatórios";
+            }
+            if (!is_string($_POST["nome"]) || trim($_POST["nome"]) === "") {
+                return "Informe o nome do produto";
+            }
+            if (mb_strlen(trim($_POST["nome"])) > 150) {
+                return "O nome do produto deve ter no máximo 150 caracteres";
+            }
+
+            //evita converter texto em preco e respeita as duas casas decimais
+            $preco = filter_var($_POST["preco"], FILTER_VALIDATE_FLOAT);
+            if ($preco === false || $preco <= 0 || $preco > 99999999.99 || round($preco, 2) != $preco) {
+                return "O preço deve ser um número maior que zero, com até duas casas decimais e no máximo 99999999.99";
+            }
+
+            $categoriaId = filter_var($_POST["categoria_id"], FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]);
+            if ($categoriaId === false || $this->categoriaModel->buscarPorId($categoriaId) === null) {
+                return "Categoria não encontrada";
+            }
+            foreach (["descricao", "imagem", "imagem_verso"] as $campo) {
+                if (isset($_POST[$campo]) && !is_string($_POST[$campo])) {
+                    return "Dados do produto inválidos";
+                }
+            }
+            foreach (["imagem", "imagem_verso"] as $campo) {
+                if (mb_strlen($_POST[$campo] ?? "") > 255) {
+                    return "O caminho da imagem deve ter no máximo 255 caracteres";
+                }
+            }
+            return null;
+        }
+
         //formulários
         public function create(): string {
-            //verifica se os campos obrigatórios foram enviados
-            if (!isset($_POST["nome"], $_POST["preco"], $_POST["categoria_id"])) {
-                $_SESSION["mensagem"] = "Preencha os campos obrigatórios";
+            try {
+                $erro = $this->validarDados();
+                if ($erro !== null) {
+                    $_SESSION["mensagem"] = $erro;
+                    $_SESSION["tipo"] = "erro";
+                    header("Location: /staysharp/produtos/cadastrar");
+                    exit;
+                }
+                $categoria_id = (int) $_POST["categoria_id"];
+
+                $voltar = "/staysharp/produtos/cadastrar";
+
+                //a foto de frente é obrigatória no cadastro
+                if (!isset($_FILES["imagem"]) || $_FILES["imagem"]["error"] === UPLOAD_ERR_NO_FILE) {
+                    $_SESSION["mensagem"] = "Envie a foto de frente do produto";
+                    $_SESSION["tipo"] = "erro";
+                    header("Location: $voltar");
+                    exit;
+                }
+
+                $imagem = $this->enviarImagem("imagem", "", $voltar);
+                $imagemVerso = $this->enviarImagem("imagem_verso", "", $voltar);
+
+                //adiciona o produto no banco
+                $this->model->criar(
+                    trim($_POST["nome"]),
+                    trim($_POST["descricao"] ?? ""),
+                    (float) $_POST["preco"],
+                    $categoria_id,
+                    $imagem,
+                    $imagemVerso
+                );
+
+                $_SESSION["mensagem"] = "Produto cadastrado com sucesso";
+                $_SESSION["tipo"] = "sucesso";
+                header("Location: /staysharp/produtos");
+                exit;
+            } catch (PDOException $e) {
+                $_SESSION["mensagem"] = "Não foi possível cadastrar o produto. Tente novamente.";
                 $_SESSION["tipo"] = "erro";
                 header("Location: /staysharp/produtos/cadastrar");
                 exit;
             }
-
-            if (trim($_POST["nome"]) === "") {
-                $_SESSION["mensagem"] = "Informe o nome do produto";
-                $_SESSION["tipo"] = "erro";
-                header("Location: /staysharp/produtos/cadastrar");
-                exit;
-            }
-
-            if ((float) $_POST["preco"] <= 0) {
-                $_SESSION["mensagem"] = "O preço deve ser maior que zero";
-                $_SESSION["tipo"] = "erro";
-                header("Location: /staysharp/produtos/cadastrar");
-                exit;
-            }
-
-            $categoria_id = (int) $_POST["categoria_id"];
-
-            //verifica se a categoria escolhida existe
-            $categoriaExiste = $this->categoriaModel->buscarPorId($categoria_id) !== null;
-
-            if (!$categoriaExiste) {
-                $_SESSION["mensagem"] = "Categoria não encontrada";
-                $_SESSION["tipo"] = "erro";
-                header("Location: /staysharp/produtos/cadastrar");
-                exit;
-            }
-
-            $voltar = "/staysharp/produtos/cadastrar";
-
-            //a foto de frente é obrigatória no cadastro
-            if (!isset($_FILES["imagem"]) || $_FILES["imagem"]["error"] === UPLOAD_ERR_NO_FILE) {
-                $_SESSION["mensagem"] = "Envie a foto de frente do produto";
-                $_SESSION["tipo"] = "erro";
-                header("Location: $voltar");
-                exit;
-            }
-
-            $imagem = $this->enviarImagem("imagem", "", $voltar);
-            $imagemVerso = $this->enviarImagem("imagem_verso", "", $voltar);
-
-            //adiciona o produto no banco
-            $this->model->criar(
-                trim($_POST["nome"]),
-                trim($_POST["descricao"] ?? ""),
-                (float) $_POST["preco"],
-                $categoria_id,
-                $imagem,
-                $imagemVerso
-            );
-
-            $_SESSION["mensagem"] = "Produto cadastrado com sucesso";
-            $_SESSION["tipo"] = "sucesso";
-            header("Location: /staysharp/produtos");
-            exit;
         }
 
         public function update(): string {
-            $id = (int) ($_POST["id"] ?? 0);
+            try {
+                $id = (filter_var($_POST["id"] ?? 0, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]) ?: 0);
 
-            //procura o produto atual no banco
-            $produtoAtual = $this->model->buscarPorId($id);
+                //procura o produto atual no banco
+                $produtoAtual = $this->model->buscarPorId($id);
 
-            if ($produtoAtual === null) {
-                $_SESSION["mensagem"] = "Produto não encontrado";
+                if ($produtoAtual === null) {
+                    $_SESSION["mensagem"] = "Produto não encontrado";
+                    $_SESSION["tipo"] = "erro";
+                    header("Location: /staysharp/produtos");
+                    exit;
+                }
+
+                $erro = $this->validarDados();
+                if ($erro !== null) {
+                    $_SESSION["mensagem"] = $erro;
+                    $_SESSION["tipo"] = "erro";
+                    header("Location: /staysharp/produtos/editar?id=$id");
+                    exit;
+                }
+                $categoria_id = (int) $_POST["categoria_id"];
+
+                // sem arquivo novo, mantém a imagem que o produto já tinha
+                $voltar = "/staysharp/produtos/editar?id=$id";
+                $imagem = $this->enviarImagem("imagem", $produtoAtual["imagem"] ?? "", $voltar);
+                $imagemVerso = $this->enviarImagem("imagem_verso", $produtoAtual["imagem_verso"] ?? "", $voltar);
+
+                if (isset($_POST["remover_verso"])) {
+                    $imagemVerso = "";
+                }
+
+                //atualiza os dados do produto no banco
+                $this->model->atualizar(
+                    $id,
+                    trim($_POST["nome"]),
+                    trim($_POST["descricao"] ?? ""),
+                    (float) $_POST["preco"],
+                    $categoria_id,
+                    $imagem,
+                    $imagemVerso
+                );
+
+                $_SESSION["mensagem"] = "Produto atualizado com sucesso";
+                $_SESSION["tipo"] = "sucesso";
+                header("Location: /staysharp/produtos");
+                exit;
+            } catch (PDOException $e) {
+                $_SESSION["mensagem"] = "Não foi possível atualizar o produto. Tente novamente.";
                 $_SESSION["tipo"] = "erro";
                 header("Location: /staysharp/produtos");
                 exit;
             }
-
-            if (!isset($_POST["nome"], $_POST["preco"], $_POST["categoria_id"])) {
-                $_SESSION["mensagem"] = "Preencha os campos obrigatórios";
-                $_SESSION["tipo"] = "erro";
-                header("Location: /staysharp/produtos/editar?id=$id");
-                exit;
-            }
-
-            if (trim($_POST["nome"]) === "") {
-                $_SESSION["mensagem"] = "Informe o nome do produto";
-                $_SESSION["tipo"] = "erro";
-                header("Location: /staysharp/produtos/editar?id=$id");
-                exit;
-            }
-
-            if ((float) $_POST["preco"] <= 0) {
-                $_SESSION["mensagem"] = "O preço deve ser maior que zero";
-                $_SESSION["tipo"] = "erro";
-                header("Location: /staysharp/produtos/editar?id=$id");
-                exit;
-            }
-
-            $categoria_id = (int) $_POST["categoria_id"];
-            $categoriaExiste = $this->categoriaModel->buscarPorId($categoria_id) !== null;
-
-            if (!$categoriaExiste) {
-                $_SESSION["mensagem"] = "Categoria não encontrada";
-                $_SESSION["tipo"] = "erro";
-                header("Location: /staysharp/produtos/editar?id=$id");
-                exit;
-            }
-
-            // sem arquivo novo, mantém a imagem que o produto já tinha
-            $voltar = "/staysharp/produtos/editar?id=$id";
-            $imagem = $this->enviarImagem("imagem", $produtoAtual["imagem"] ?? "", $voltar);
-            $imagemVerso = $this->enviarImagem("imagem_verso", $produtoAtual["imagem_verso"] ?? "", $voltar);
-
-            if (isset($_POST["remover_verso"])) {
-                $imagemVerso = "";
-            }
-
-            //atualiza os dados do produto no banco
-            $this->model->atualizar(
-                $id,
-                trim($_POST["nome"]),
-                trim($_POST["descricao"] ?? ""),
-                (float) $_POST["preco"],
-                $categoria_id,
-                $imagem,
-                $imagemVerso
-            );
-
-            $_SESSION["mensagem"] = "Produto atualizado com sucesso";
-            $_SESSION["tipo"] = "sucesso";
-            header("Location: /staysharp/produtos");
-            exit;
         }
 
         public function excluir(): string {
-            $id = (int) ($_POST["id"] ?? 0);
+            try {
+                $id = (filter_var($_POST["id"] ?? 0, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]) ?: 0);
 
-            //verifica se o produto existe
-            $produtoExiste = $this->model->buscarPorId($id) !== null;
+                //verifica se o produto existe
+                $produtoExiste = $this->model->buscarPorId($id) !== null;
 
-            if (!$produtoExiste) {
-                $_SESSION["mensagem"] = "Produto não encontrado";
+                if (!$produtoExiste) {
+                    $_SESSION["mensagem"] = "Produto não encontrado";
+                    $_SESSION["tipo"] = "erro";
+                    header("Location: /staysharp/produtos");
+                    exit;
+                }
+
+                //remove o produto do banco
+                $this->model->excluir($id);
+
+                $_SESSION["mensagem"] = "Produto excluído";
+                $_SESSION["tipo"] = "sucesso";
+                header("Location: /staysharp/produtos");
+                exit;
+            } catch (PDOException $e) {
+                $_SESSION["mensagem"] = "Não foi possível excluir o produto. Tente novamente.";
                 $_SESSION["tipo"] = "erro";
                 header("Location: /staysharp/produtos");
                 exit;
             }
-
-            //remove o produto do banco
-            $this->model->excluir($id);
-
-            $_SESSION["mensagem"] = "Produto excluído";
-            $_SESSION["tipo"] = "sucesso";
-            header("Location: /staysharp/produtos");
-            exit;
         }
 
         // ===== apis =====
@@ -351,8 +361,8 @@
             //informa que a resposta será em json
             header("Content-Type: application/json; charset=UTF-8");
 
-            $categoria = $_GET["categoria"] ?? "";
-            $busca = trim($_GET["busca"] ?? "");
+            $categoria = is_string($_GET["categoria"] ?? null) ? $_GET["categoria"] : "";
+            $busca = is_string($_GET["busca"] ?? null) ? trim($_GET["busca"]) : "";
 
             //filtra os produtos pela categoria e pela busca
             $produtos = $this->model->listar($categoria, $busca);
@@ -364,7 +374,7 @@
             //informa que a resposta será em json
             header("Content-Type: application/json; charset=UTF-8");
 
-            $id = (int) ($_GET["id"] ?? 0);
+            $id = (filter_var($_GET["id"] ?? 0, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]) ?: 0);
 
             //procura o produto pelo id
             $produtoEncontrado = $this->model->buscarPorId($id);
@@ -383,80 +393,63 @@
         }
 
         public function apiCreate(): string {
-            //informa que a resposta será em json
-            header("Content-Type: application/json; charset=UTF-8");
+            try {
+                //informa que a resposta será em json
+                header("Content-Type: application/json; charset=UTF-8");
 
-            //valida os campos recebidos pela api
-            if (!isset($_POST["nome"], $_POST["preco"], $_POST["categoria_id"])) {
-                http_response_code(400);
-                return json_encode([
-                    "erro" => "Preencha os campos obrigatórios"
-                ], JSON_UNESCAPED_UNICODE);
+                $erro = $this->validarDados();
+                if ($erro !== null) {
+                    http_response_code(400);
+                    return json_encode(["erro" => $erro], JSON_UNESCAPED_UNICODE);
+                }
+                $categoria_id = (int) $_POST["categoria_id"];
+
+                //salva o produto no banco
+                $id = $this->model->criar(
+                    trim($_POST["nome"]),
+                    trim($_POST["descricao"] ?? ""),
+                    (float) $_POST["preco"],
+                    $categoria_id,
+                    trim($_POST["imagem"] ?? ""),
+                    trim($_POST["imagem_verso"] ?? "")
+                );
+                $produto = $this->model->buscarPorId($id);
+
+                http_response_code(201);
+                return json_encode($produto, JSON_UNESCAPED_UNICODE);
+            } catch (PDOException $e) {
+                http_response_code(500);
+                return json_encode(["erro" => "Não foi possível cadastrar o produto. Tente novamente."], JSON_UNESCAPED_UNICODE);
             }
-
-            if (trim($_POST["nome"]) === "") {
-                http_response_code(400);
-                return json_encode([
-                    "erro" => "Informe o nome do produto"
-                ], JSON_UNESCAPED_UNICODE);
-            }
-
-            if ((float) $_POST["preco"] <= 0) {
-                http_response_code(400);
-                return json_encode([
-                    "erro" => "O preço deve ser maior que zero"
-                ], JSON_UNESCAPED_UNICODE);
-            }
-
-            $categoria_id = (int) $_POST["categoria_id"];
-
-            //verifica se a categoria existe
-            $categoriaExiste = $this->categoriaModel->buscarPorId($categoria_id) !== null;
-
-            if (!$categoriaExiste) {
-                http_response_code(400);
-                return json_encode([
-                    "erro" => "Categoria não encontrada"
-                ], JSON_UNESCAPED_UNICODE);
-            }
-
-            //salva o produto no banco
-            $id = $this->model->criar(
-                trim($_POST["nome"]),
-                trim($_POST["descricao"] ?? ""),
-                (float) $_POST["preco"],
-                $categoria_id,
-                trim($_POST["imagem"] ?? ""),
-                trim($_POST["imagem_verso"] ?? "")
-            );
-            $produto = $this->model->buscarPorId($id);
-
-            http_response_code(201);
-            return json_encode($produto, JSON_UNESCAPED_UNICODE);
         }
 
         public function apiDelete(): string {
-            //informa que a resposta será em json
-            header("Content-Type: application/json; charset=UTF-8");
+            try {
+                //informa que a resposta será em json
+                header("Content-Type: application/json; charset=UTF-8");
 
-            $id = (int) ($_POST["id"] ?? 0);
+                $id = (filter_var($_POST["id"] ?? 0, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]) ?: 0);
 
-            //verifica se o produto existe
-            $produtoExiste = $this->model->buscarPorId($id) !== null;
+                //verifica se o produto existe
+                $produtoExiste = $this->model->buscarPorId($id) !== null;
 
-            if (!$produtoExiste) {
-                http_response_code(404);
+                if (!$produtoExiste) {
+                    http_response_code(404);
+                    return json_encode([
+                        "erro" => "Produto não encontrado"
+                    ], JSON_UNESCAPED_UNICODE);
+                }
+
+                //remove o produto do banco
+                $this->model->excluir($id);
+
                 return json_encode([
-                    "erro" => "Produto não encontrado"
+                    "mensagem" => "Excluído"
                 ], JSON_UNESCAPED_UNICODE);
+            } catch (PDOException $e) {
+                http_response_code(500);
+                return json_encode(["erro" => "Não foi possível excluir o produto. Tente novamente."], JSON_UNESCAPED_UNICODE);
             }
-
-            //remove o produto do banco
-            $this->model->excluir($id);
-
-            return json_encode([
-                "mensagem" => "Excluído"
-            ], JSON_UNESCAPED_UNICODE);
         }
     }
 ?>

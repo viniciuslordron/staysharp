@@ -47,6 +47,8 @@
     // pegar o método da requisição (GET ou POST)
     $metodo = $_SERVER["REQUEST_METHOD"];
 
+    //trata falhas na conexao e nas consultas sem mostrar o erro tecnico
+    try {
     // GET
     if ($metodo === "GET") {
         if ($uri === "/login") {
@@ -195,6 +197,18 @@
             echo (new ProdutoController())->apiDelete();
             exit;
         }
+    }
+
+    } catch (PDOException $e) {
+        http_response_code(503);
+        if (str_starts_with($uri, "/api/")) {
+            header("Content-Type: application/json; charset=UTF-8");
+            echo json_encode(["erro" => "Não foi possível acessar os dados da loja. Tente novamente mais tarde."], JSON_UNESCAPED_UNICODE);
+        } else {
+            $titulo = "Dados temporariamente indisponíveis";
+            echo (new App\Views\Render())->render('erros/banco', compact('titulo'));
+        }
+        exit;
     }
 
     //nenhuma rota encontrada
