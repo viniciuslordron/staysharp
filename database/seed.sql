@@ -15,7 +15,7 @@ INSERT INTO tamanhos (produto_id, tamanho, estoque) VALUES
 (1, 'P', 10), (1, 'M', 15), (1, 'G', 8), (1, 'GG', 0),  -- GG esgotado
 (2, 'P', 5),  (2, 'M', 12), (2, 'G', 7), (2, 'GG', 3);
 
---Boanés e adesivos
+-- Bonés e adesivos
 INSERT INTO tamanhos (produto_id, tamanho, estoque) VALUES
 (3, 'Único', 20),
 (4, 'Único', 50);

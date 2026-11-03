@@ -44,12 +44,14 @@
 
                     <div class="acoes">
                         <a class="btn" href="/staysharp/produto?id=<?= $p["id"] ?>">Ver detalhes</a>
+                        <?php if (isset($_SESSION["usuario"])): ?>
                         <a class="btn btn-secundario" href="/staysharp/produtos/editar?id=<?= $p["id"] ?>">Editar</a>
                         <form method="POST" action="/staysharp/produtos/excluir"
                               onsubmit="return confirm('Excluir este produto?')">
                             <input type="hidden" name="id" value="<?= $p["id"] ?>">
                             <button class="btn btn-perigo" type="submit">Excluir</button>
                         </form>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

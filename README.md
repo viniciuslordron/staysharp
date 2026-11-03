@@ -52,6 +52,25 @@ https://github.com/viniciuslordron/staysharp
 
 > O `mod_rewrite` do Apache precisa estar ativo, porque o `.htaccess` manda todas as rotas para o `index.php`.
 
+## Login da administração
+
+A vitrine e as APIs de consulta são públicas. Para cadastrar, editar ou excluir produtos, categorias e tamanhos, entre em **http://localhost/staysharp/login**.
+
+Usuário de exemplo do `database/seed.sql`:
+
+- E-mail: `admin@teste.com`
+- Senha: `123456`
+
+O menu mostra **Entrar** sem sessão e **Sair (nome)** após o login. A rota `/logout` encerra a sessão.
+
+Se a tabela `usuarios` já foi criada com a coluna antiga `usuario`, renomeie essa coluna antes de usar o login:
+
+```sql
+ALTER TABLE usuarios CHANGE usuario email VARCHAR(150) NOT NULL;
+```
+
+Em um banco existente, adicione somente a tabela `usuarios` do schema e o usuário de exemplo do seed caso ainda não existam, sem importar novamente os produtos e as categorias.
+
 ## Estrutura de pastas
 
 ```
