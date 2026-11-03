@@ -6,6 +6,7 @@
     use App\Controllers\HomeController;
     use App\Controllers\CategoriaController;
     use App\Controllers\ProdutoController;
+    use App\Controllers\TamanhoController;
 
     //mantem a sessao para as mensagens
     session_start();
@@ -117,6 +118,20 @@
         }
         if ($uri === "/produtos/excluir") {
             echo (new ProdutoController())->excluir();
+            exit;
+        }
+
+        //formulários de tamanhos do produto
+        if ($uri === "/tamanhos/salvar") {
+            echo (new TamanhoController())->create();
+            exit;
+        }
+        if ($uri === "/tamanhos/atualizar") {
+            echo (new TamanhoController())->update();
+            exit;
+        }
+        if ($uri === "/tamanhos/excluir") {
+            echo (new TamanhoController())->excluir();
             exit;
         }
 

@@ -148,6 +148,10 @@
     </aside>
 </div>
 
+<?php if ($editando): ?>
+    <?php require __DIR__ . "/../tamanhos/index.php"; ?>
+<?php endif; ?>
+
 <script>
     (function () {
         var $ = function (id) { return document.getElementById(id); };
