@@ -3,7 +3,6 @@
 namespace App\Config;
 
 use PDO;
-use PDOException;
 
 class Database {
     private static ?PDO $conn = null;
@@ -23,14 +22,10 @@ class Database {
         //string de conexao
         $dns = "mysql:host=$host;dbname=$dbname;charset=$charset";
 
-        try {
-            self::$conn = new PDO($dns, $user, $password);
-            return self::$conn;
-        } catch (PDOException $e) {
-            //mostra o erro e encerra se nao conectar
-            echo $e->getMessage();
-            exit;
-        }
+        self::$conn = new PDO($dns, $user, $password);
+        //permite tratar os erros do banco com try/catch nos controllers
+        self::$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        return self::$conn;
     }
 }
 ?>
