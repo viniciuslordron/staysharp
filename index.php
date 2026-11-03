@@ -8,6 +8,7 @@
     use App\Controllers\ProdutoController;
     use App\Controllers\TamanhoController;
     use App\Controllers\LoginController;
+    use App\Controllers\RelatorioController;
 
     //mantem a sessao para as mensagens
     session_start();
@@ -100,6 +101,18 @@
         if ($uri === "/produtos/editar") {
             exigirLogin();
             echo (new ProdutoController())->editar();
+            exit;
+        }
+
+        //relatorio de estoque e exportacao CSV
+        if ($uri === "/relatorios") {
+            exigirLogin();
+            echo (new RelatorioController())->index();
+            exit;
+        }
+        if ($uri === "/relatorios/exportar") {
+            exigirLogin();
+            echo (new RelatorioController())->exportar();
             exit;
         }
 

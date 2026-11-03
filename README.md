@@ -71,6 +71,14 @@ ALTER TABLE usuarios CHANGE usuario email VARCHAR(150) NOT NULL;
 
 Em um banco existente, adicione somente a tabela `usuarios` do schema e o usuário de exemplo do seed caso ainda não existam, sem importar novamente os produtos e as categorias.
 
+## Relatório de estoque
+
+Após entrar, use o menu **Relatórios** ou acesse `/relatorios`. A página mostra o total por categoria e o estoque por produto e tamanho, incluindo produtos sem tamanhos cadastrados com estoque zero.
+
+O filtro **Todos / Em estoque / Esgotado** é aplicado às listas e ao botão **Exportar CSV**. Os totais por categoria mostram sempre o estoque geral. A rota `/relatorios/exportar` gera um arquivo UTF-8 separado por ponto e vírgula, com as colunas Produto, Categoria, Tamanho, Estoque e Status, para abrir no Excel.
+
+As duas rotas exigem login.
+
 ## Estrutura de pastas
 
 ```
