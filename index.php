@@ -9,6 +9,7 @@
     use App\Controllers\TamanhoController;
     use App\Controllers\LoginController;
     use App\Controllers\RelatorioController;
+    use App\Controllers\ContaController;
 
     //mantem a sessao para as mensagens
     session_start();
@@ -58,6 +59,18 @@
         }
         if ($uri === "/logout") {
             echo (new LoginController())->sair();
+            exit;
+        }
+
+        // painel e conta do usuario logado
+        if ($uri === "/painel") {
+            exigirLogin();
+            echo (new ContaController())->painel();
+            exit;
+        }
+        if ($uri === "/conta") {
+            exigirLogin();
+            echo (new ContaController())->index();
             exit;
         }
 
@@ -135,6 +148,12 @@
     if ($metodo === "POST") {
         if ($uri === "/login") {
             echo (new LoginController())->entrar();
+            exit;
+        }
+
+        if ($uri === "/conta/atualizar") {
+            exigirLogin();
+            echo (new ContaController())->atualizar();
             exit;
         }
 

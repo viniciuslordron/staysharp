@@ -42,7 +42,8 @@
                 $_SESSION["usuario"] = [
                     "id" => $usuario["id"],
                     "nome" => $usuario["nome"],
-                    "email" => $usuario["email"]
+                    "email" => $usuario["email"],
+                    "foto" => $usuario["foto"] ?? ""
                 ];
                 $_SESSION["mensagem"] = "Login realizado com sucesso";
                 $_SESSION["tipo"] = "sucesso";

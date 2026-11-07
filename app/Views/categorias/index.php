@@ -28,7 +28,7 @@
 
                     <div class="menu-acoes-lista" hidden>
                         <a href="/staysharp/categorias/editar?id=<?= $c["id"] ?>">Editar</a>
-                        <form method="POST" action="/staysharp/categorias/excluir" onsubmit="return confirm('Excluir?')">
+                        <form method="POST" action="/staysharp/categorias/excluir" data-confirmar="Deseja excluir esta categoria?">
                             <input type="hidden" name="id" value="<?= $c["id"] ?>">
                             <button class="excluir" type="submit">Excluir</button>
                         </form>

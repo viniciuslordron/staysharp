@@ -5,6 +5,7 @@
     use App\Models\ProdutoModel;
     use App\Models\CategoriaModel;
     use App\Models\TamanhoModel;
+    use App\Config\Database;
 
     class ProdutoController {
         private ProdutoModel $model;
@@ -225,6 +226,95 @@
             return null;
         }
 
+        // le os tamanhos enviados junto com o formulario do produto
+        // devolve [erro, plano]; o plano diz o que atualizar, remover e criar
+        private function lerTamanhos(array $existentes): array {
+            $plano = ["atualizar" => [], "remover" => [], "novos" => []];
+            $porId = [];
+            foreach ($existentes as $t) {
+                $porId[(int) $t["id"]] = $t;
+            }
+            $limite = ["options" => ["min_range" => 0, "max_range" => 2147483647]];
+            $msgEstoque = "O estoque deve ser um número inteiro entre 0 e 2147483647";
+
+            $remover = $_POST["remover_tamanhos"] ?? [];
+            if (!is_array($remover)) {
+                return ["Dados de tamanhos inválidos", $plano];
+            }
+            foreach ($remover as $idRemover) {
+                $idRemover = filter_var($idRemover, FILTER_VALIDATE_INT);
+                if ($idRemover !== false && isset($porId[$idRemover])) {
+                    $plano["remover"][$idRemover] = true;
+                }
+            }
+
+            $atuais = $_POST["tamanhos"] ?? [];
+            if (!is_array($atuais)) {
+                return ["Dados de tamanhos inválidos", $plano];
+            }
+            foreach ($atuais as $idTamanho => $estoque) {
+                $idTamanho = (int) $idTamanho;
+                if (!isset($porId[$idTamanho]) || isset($plano["remover"][$idTamanho])) {
+                    continue;
+                }
+                $estoque = is_string($estoque) ? filter_var($estoque, FILTER_VALIDATE_INT, $limite) : false;
+                if ($estoque === false) {
+                    return [$msgEstoque, $plano];
+                }
+                $plano["atualizar"][$idTamanho] = $estoque;
+            }
+
+            // nomes que continuam no produto, para impedir tamanho repetido
+            $usados = [];
+            foreach ($porId as $idTamanho => $t) {
+                if (!isset($plano["remover"][$idTamanho])) {
+                    $usados[mb_strtolower($t["tamanho"])] = true;
+                }
+            }
+
+            $novos = $_POST["novos_tamanhos"] ?? [];
+            if (!is_array($novos)) {
+                return ["Dados de tamanhos inválidos", $plano];
+            }
+            foreach ($novos as $novo) {
+                if (!is_array($novo) || !is_string($novo["nome"] ?? null) || !is_string($novo["estoque"] ?? null)) {
+                    return ["Dados de tamanhos inválidos", $plano];
+                }
+                $nome = trim($novo["nome"]);
+                if ($nome === "") {
+                    continue;
+                }
+                if (mb_strlen($nome) > 10) {
+                    return ["O tamanho deve ter no máximo 10 caracteres", $plano];
+                }
+                $estoque = filter_var($novo["estoque"], FILTER_VALIDATE_INT, $limite);
+                if ($estoque === false) {
+                    return [$msgEstoque, $plano];
+                }
+                if (isset($usados[mb_strtolower($nome)])) {
+                    return ["O tamanho $nome está repetido neste produto", $plano];
+                }
+                $usados[mb_strtolower($nome)] = true;
+                $plano["novos"][] = [$nome, $estoque];
+            }
+
+            return [null, $plano];
+        }
+
+        // grava o plano dos tamanhos para o produto
+        private function salvarTamanhos(int $produtoId, array $plano): void {
+            foreach (array_keys($plano["remover"]) as $idTamanho) {
+                $this->tamanhoModel->excluir($idTamanho);
+            }
+            foreach ($plano["atualizar"] as $idTamanho => $estoque) {
+                $atual = $this->tamanhoModel->buscarPorId($idTamanho);
+                $this->tamanhoModel->atualizar($idTamanho, $atual["tamanho"], $estoque);
+            }
+            foreach ($plano["novos"] as [$nome, $estoque]) {
+                $this->tamanhoModel->criar($produtoId, $nome, $estoque);
+            }
+        }
+
         //formulários
         public function create(): string {
             try {
@@ -239,6 +329,14 @@
 
                 $voltar = "/staysharp/produtos/cadastrar";
 
+                [$erro, $plano] = $this->lerTamanhos([]);
+                if ($erro !== null) {
+                    $_SESSION["mensagem"] = $erro;
+                    $_SESSION["tipo"] = "erro";
+                    header("Location: $voltar");
+                    exit;
+                }
+
                 //a foto de frente é obrigatória no cadastro
                 if (!isset($_FILES["imagem"]) || $_FILES["imagem"]["error"] === UPLOAD_ERR_NO_FILE) {
                     $_SESSION["mensagem"] = "Envie a foto de frente do produto";
@@ -250,15 +348,24 @@
                 $imagem = $this->enviarImagem("imagem", "", $voltar);
                 $imagemVerso = $this->enviarImagem("imagem_verso", "", $voltar);
 
-                //adiciona o produto no banco
-                $this->model->criar(
-                    trim($_POST["nome"]),
-                    trim($_POST["descricao"] ?? ""),
-                    (float) $_POST["preco"],
-                    $categoria_id,
-                    $imagem,
-                    $imagemVerso
-                );
+                //adiciona o produto e os tamanhos no banco, tudo ou nada
+                $pdo = Database::getConnection();
+                $pdo->beginTransaction();
+                try {
+                    $novoId = $this->model->criar(
+                        trim($_POST["nome"]),
+                        trim($_POST["descricao"] ?? ""),
+                        (float) $_POST["preco"],
+                        $categoria_id,
+                        $imagem,
+                        $imagemVerso
+                    );
+                    $this->salvarTamanhos($novoId, $plano);
+                    $pdo->commit();
+                } catch (PDOException $e) {
+                    $pdo->rollBack();
+                    throw $e;
+                }
 
                 $_SESSION["mensagem"] = "Produto cadastrado com sucesso";
                 $_SESSION["tipo"] = "sucesso";
@@ -297,6 +404,14 @@
 
                 // sem arquivo novo, mantém a imagem que o produto já tinha
                 $voltar = "/staysharp/produtos/editar?id=$id";
+
+                [$erro, $plano] = $this->lerTamanhos($this->tamanhoModel->listarPorProduto($id));
+                if ($erro !== null) {
+                    $_SESSION["mensagem"] = $erro;
+                    $_SESSION["tipo"] = "erro";
+                    header("Location: $voltar");
+                    exit;
+                }
                 $imagem = $this->enviarImagem("imagem", $produtoAtual["imagem"] ?? "", $voltar);
                 $imagemVerso = $this->enviarImagem("imagem_verso", $produtoAtual["imagem_verso"] ?? "", $voltar);
 
@@ -304,16 +419,25 @@
                     $imagemVerso = "";
                 }
 
-                //atualiza os dados do produto no banco
-                $this->model->atualizar(
-                    $id,
-                    trim($_POST["nome"]),
-                    trim($_POST["descricao"] ?? ""),
-                    (float) $_POST["preco"],
-                    $categoria_id,
-                    $imagem,
-                    $imagemVerso
-                );
+                //atualiza o produto e os tamanhos no banco, tudo ou nada
+                $pdo = Database::getConnection();
+                $pdo->beginTransaction();
+                try {
+                    $this->model->atualizar(
+                        $id,
+                        trim($_POST["nome"]),
+                        trim($_POST["descricao"] ?? ""),
+                        (float) $_POST["preco"],
+                        $categoria_id,
+                        $imagem,
+                        $imagemVerso
+                    );
+                    $this->salvarTamanhos($id, $plano);
+                    $pdo->commit();
+                } catch (PDOException $e) {
+                    $pdo->rollBack();
+                    throw $e;
+                }
 
                 $_SESSION["mensagem"] = "Produto atualizado com sucesso";
                 $_SESSION["tipo"] = "sucesso";

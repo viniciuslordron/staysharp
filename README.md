@@ -44,14 +44,13 @@ Abra o painel do XAMPP e inicie **Apache** e **MySQL**.
 
 ### 3. Criar e preencher o banco
 
-Em uma instalação nova, execute os arquivos nesta ordem:
+O arquivo `database/seed.sql` faz tudo de uma vez: apaga o banco `staysharp` (se existir), recria o banco, as quatro tabelas e as chaves estrangeiras, e insere 3 categorias, 6 produtos, 10 registros de tamanhos e um usuário de teste.
 
-1. `database/schema.sql`: cria o banco `staysharp`, as quatro tabelas e as chaves estrangeiras.
-2. `database/seed.sql`: insere 3 categorias, 6 produtos, 10 registros de tamanhos e um usuário de teste.
+No **MySQL Workbench**, conecte ao MySQL local, abra o `database/seed.sql` e execute o script inteiro.
 
-No **MySQL Workbench**, conecte ao MySQL local, abra o `database/schema.sql` e execute o script. Atualize a lista de schemas, selecione `staysharp` como banco padrão e execute o `database/seed.sql`.
+Também é possível importar pelo **phpMyAdmin**, em `http://localhost/phpmyadmin/`, na aba **Importar**, escolhendo o `database/seed.sql`.
 
-Também é possível importar pelo **phpMyAdmin**, em `http://localhost/phpmyadmin/`: importe o schema, selecione o banco `staysharp` e importe o seed.
+O `database/schema.sql` continua disponível para criar só a estrutura, sem dados.
 
 Os scripts são para uma instalação nova. Se já possui dados, não importe tudo novamente.
 
@@ -122,7 +121,7 @@ staysharp/
 | `categorias` | `id`, `nome` |
 | `produtos` | `id`, `nome`, `descricao`, `preco`, `categoria_id`, `imagem`, `imagem_verso` |
 | `tamanhos` | `id`, `produto_id`, `tamanho`, `estoque` |
-| `usuarios` | `id`, `nome`, `email`, `senha` |
+| `usuarios` | `id`, `nome`, `email`, `senha`, `foto` |
 
 Uma categoria possui vários produtos, e um produto pode ter vários tamanhos. As chaves estrangeiras são `produtos.categoria_id` e `tamanhos.produto_id`. O mesmo tamanho não pode ser repetido no mesmo produto. Ao excluir um produto, seus tamanhos também são excluídos.
 
@@ -141,11 +140,13 @@ Todas as rotas abaixo usam o prefixo `http://localhost/staysharp`.
 | `/produto?id=1` | Detalhe, tamanhos, estoque e pedido pelo WhatsApp | Não |
 | `/login` | Tela de login | Não |
 | `/logout` | Encerra a sessão | Não |
+| `/painel` | Painel Administrador, com atalhos para produtos, categorias e relatórios | Sim |
+| `/conta` | Gerenciar conta: trocar a foto e o nome do perfil | Sim |
 | `/categorias` | Listagem de categorias | Sim |
 | `/categorias/cadastrar` | Cadastro de categoria | Sim |
 | `/categorias/editar?id=1` | Edição de categoria | Sim |
-| `/produtos/cadastrar` | Cadastro de produto | Sim |
-| `/produtos/editar?id=1` | Edição do produto e gerenciamento dos tamanhos | Sim |
+| `/produtos/cadastrar` | Cadastro de produto, com fotos, tamanhos e prévia do anúncio | Sim |
+| `/produtos/editar?id=1` | Edição do produto, das fotos e dos tamanhos | Sim |
 | `/relatorios` | Relatório de estoque | Sim |
 | `/relatorios/exportar` | Download do estoque em CSV | Sim |
 
@@ -162,11 +163,12 @@ Exemplos de busca e filtros:
 | Rota | Função | Exige login |
 |---|---|---|
 | `/login` | Autentica com `email` e `senha` | Não |
+| `/conta/atualizar` | Atualiza o nome e a foto do perfil | Sim |
 | `/categorias/salvar` | Cadastra categoria | Sim |
 | `/categorias/atualizar` | Atualiza categoria | Sim |
 | `/categorias/excluir` | Exclui categoria sem produtos | Sim |
-| `/produtos/salvar` | Cadastra produto com upload de imagem | Sim |
-| `/produtos/atualizar` | Atualiza produto | Sim |
+| `/produtos/salvar` | Cadastra produto com upload de imagem e seus tamanhos | Sim |
+| `/produtos/atualizar` | Atualiza produto e seus tamanhos | Sim |
 | `/produtos/excluir` | Exclui produto e seus tamanhos | Sim |
 | `/tamanhos/salvar` | Adiciona tamanho e estoque ao produto | Sim |
 | `/tamanhos/atualizar` | Atualiza o estoque de um tamanho | Sim |
@@ -217,11 +219,11 @@ O login feito no navegador não autentica automaticamente o Postman ou o Insomni
 
 ## Estoque e relatórios
 
-Os tamanhos são gerenciados na tela de edição do produto. O estoque deve ser inteiro e maior ou igual a zero. Um produto sem tamanhos ou com estoque total zero aparece como esgotado na vitrine. No seed, os adesivos começam sem tamanhos cadastrados.
+Os tamanhos e o estoque são preenchidos no próprio formulário do produto (cadastro e edição) e salvos junto com ele, no botão **Salvar produto**. Há botões rápidos para P, M, G, GG e Único, além de um campo para outro tamanho, e a prévia do anúncio mostra o resultado. O estoque deve ser inteiro e maior ou igual a zero. Um produto sem tamanhos ou com estoque total zero aparece como esgotado na vitrine. No seed, os adesivos começam sem tamanhos cadastrados.
 
-O relatório mostra o total geral por categoria e as listas por produto e tamanho. O filtro **Todos / Em estoque / Esgotado** é aplicado às listas e ao CSV. Os totais por categoria continuam mostrando o estoque geral.
+O relatório mostra o total geral por categoria e a lista de produtos, com a coluna **Tamanhos** (por exemplo `P: 10 · M: 15 · G: 8`), o estoque total e o status. O filtro **Todos / Em estoque / Esgotado** considera o estoque total do produto e é aplicado à lista e ao CSV. Os totais por categoria continuam mostrando o estoque geral.
 
-O botão **Exportar CSV** baixa `estoque-staysharp.csv`, em UTF-8 com BOM e separado por ponto e vírgula, com Produto, Categoria, Tamanho, Estoque e Status. Para importar no Excel, selecione UTF-8 e ponto e vírgula caso as colunas não sejam reconhecidas automaticamente.
+O botão **Exportar CSV** baixa `estoque-staysharp.csv`, com uma linha por tamanho, em UTF-8 com BOM e separado por ponto e vírgula, com Produto, Categoria, Tamanho, Estoque e Status. Para importar no Excel, selecione UTF-8 e ponto e vírgula caso as colunas não sejam reconhecidas automaticamente.
 
 ## Validações e mensagens
 

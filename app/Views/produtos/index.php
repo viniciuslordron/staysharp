@@ -47,7 +47,7 @@
                         <?php if (isset($_SESSION["usuario"])): ?>
                         <a class="btn btn-secundario" href="/staysharp/produtos/editar?id=<?= $p["id"] ?>">Editar</a>
                         <form method="POST" action="/staysharp/produtos/excluir"
-                              onsubmit="return confirm('Excluir este produto?')">
+                              data-confirmar="Deseja excluir este produto?">
                             <input type="hidden" name="id" value="<?= $p["id"] ?>">
                             <button class="btn btn-perigo" type="submit">Excluir</button>
                         </form>
