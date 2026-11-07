@@ -22,7 +22,7 @@
 </table>
 
 <h2>Estoque dos produtos</h2>
-<p>O filtro abaixo e a exportação CSV (que detalha cada tamanho) usam o status de estoque. Os totais por categoria mostram o estoque geral.</p>
+<p>O filtro abaixo considera o estoque total de cada produto. A exportação CSV traz os mesmos produtos da lista, detalhando cada tamanho. Os totais por categoria mostram o estoque geral.</p>
 <form class="busca" method="GET" action="/staysharp/relatorios">
     <label for="status">Status</label>
     <select name="status" id="status">

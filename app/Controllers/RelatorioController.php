@@ -40,7 +40,12 @@
         public function exportar(): string {
             $status = $this->pegarStatus();
             //consulta antes de iniciar o download para poder tratar falhas do banco
-            $tamanhos = $this->model->estoquePorTamanho($status);
+            //exporta os mesmos produtos da tela (filtrados pelo estoque total), detalhando cada tamanho
+            $idsProdutos = array_column($this->model->estoquePorProduto($status), "id");
+            $tamanhos = array_values(array_filter(
+                $this->model->estoquePorTamanho(),
+                fn($t) => in_array($t["produto_id"], $idsProdutos)
+            ));
 
             header("Content-Type: text/csv; charset=UTF-8");
             header('Content-Disposition: attachment; filename="estoque-staysharp.csv"');

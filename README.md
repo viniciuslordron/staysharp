@@ -223,7 +223,7 @@ Os tamanhos e o estoque são preenchidos no próprio formulário do produto (cad
 
 O relatório mostra o total geral por categoria e a lista de produtos, com a coluna **Tamanhos** (por exemplo `P: 10 · M: 15 · G: 8`), o estoque total e o status. O filtro **Todos / Em estoque / Esgotado** considera o estoque total do produto e é aplicado à lista e ao CSV. Os totais por categoria continuam mostrando o estoque geral.
 
-O botão **Exportar CSV** baixa `estoque-staysharp.csv`, com uma linha por tamanho, em UTF-8 com BOM e separado por ponto e vírgula, com Produto, Categoria, Tamanho, Estoque e Status. Para importar no Excel, selecione UTF-8 e ponto e vírgula caso as colunas não sejam reconhecidas automaticamente.
+O botão **Exportar CSV** baixa `estoque-staysharp.csv`, com os mesmos produtos da lista (respeitando o filtro de status) e uma linha por tamanho, em UTF-8 com BOM e separado por ponto e vírgula, com Produto, Categoria, Tamanho, Estoque e Status. Para importar no Excel, selecione UTF-8 e ponto e vírgula caso as colunas não sejam reconhecidas automaticamente.
 
 ## Validações e mensagens
 
