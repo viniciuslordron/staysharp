@@ -2,6 +2,7 @@
     $editando = isset($produto);
     $frenteAtual = $produto["imagem"] ?? "";
     $versoAtual = $produto["imagem_verso"] ?? "";
+    $tamanhos = $tamanhos ?? [];
 ?>
 <h1><?= $editando ? "Editar Produto" : "Novo Produto" ?></h1>
 
@@ -83,6 +84,41 @@
             <?php endif; ?>
         </div>
 
+        <div class="tamanhos-editor">
+            <span class="fotos-titulo">Tamanhos e estoque <small>(opcional)</small></span>
+
+            <div class="tamanhos-painel">
+                <div id="lista-tamanhos">
+                    <?php foreach ($tamanhos as $t): ?>
+                        <div class="tamanho-linha" data-linha data-nome="<?= htmlspecialchars($t["tamanho"]) ?>">
+                            <span class="tamanho-nome"><?= htmlspecialchars($t["tamanho"]) ?></span>
+                            <div class="estoque-form">
+                                <input type="number" name="tamanhos[<?= $t["id"] ?>]" aria-label="Estoque do tamanho <?= htmlspecialchars($t["tamanho"]) ?>" value="<?= (int) $t["estoque"] ?>" min="0" max="2147483647" step="1" required>
+                                <span class="estoque-un">un.</span>
+                            </div>
+                            <span class="estoque-status"></span>
+                            <button type="button" class="btn-link-perigo" data-remover data-id="<?= $t["id"] ?>">Remover</button>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <p class="tamanhos-vazio" id="tamanhos-vazio" <?= count($tamanhos) > 0 ? "hidden" : "" ?>>Nenhum tamanho ainda. Escolha abaixo.</p>
+
+                <div class="tamanho-novo">
+                    <span class="tamanho-novo-titulo">Adicionar tamanho</span>
+                    <div class="tamanho-novo-campos">
+                        <?php foreach (["P", "M", "G", "GG", "Único"] as $rapido): ?>
+                            <button type="button" class="tamanho-rapido" data-rapido="<?= $rapido ?>"><?= $rapido ?></button>
+                        <?php endforeach; ?>
+                        <input type="text" id="tamanho-outro" aria-label="Outro tamanho" maxlength="10" placeholder="Outro (ex.: XG)">
+                        <button type="button" class="btn btn-secundario" id="tamanho-add">Adicionar</button>
+                    </div>
+                    <small class="tamanho-aviso" id="tamanho-aviso" hidden></small>
+                </div>
+            </div>
+            <small>Com estoque 0 o tamanho aparece como esgotado na loja. Tudo é salvo junto no botão Salvar produto.</small>
+        </div>
+
         <div class="form-botoes">
             <button class="btn" type="submit">Salvar produto</button>
             <a class="btn btn-secundario" href="/staysharp/produtos">Voltar</a>
@@ -134,7 +170,7 @@
 
                     <div class="tamanhos">
                         <span class="tamanhos-titulo">Tamanho</span>
-                        <small>Os tamanhos e o estoque são cadastrados depois de salvar.</small>
+                        <div class="tamanhos-lista" data-esp-tamanhos></div>
                     </div>
 
                     <div class="acoes">
@@ -147,10 +183,6 @@
         <small>Passe o mouse sobre a foto para ver o verso, como na loja.</small>
     </aside>
 </div>
-
-<?php if ($editando): ?>
-    <?php require __DIR__ . "/../tamanhos/index.php"; ?>
-<?php endif; ?>
 
 <script>
     (function () {
@@ -235,9 +267,163 @@
             });
         });
 
+        // ===== tamanhos e estoque (salvos junto com o produto) =====
+        var listaTamanhos = $("lista-tamanhos");
+        var avisoTamanho = $("tamanho-aviso");
+        var proximoNovo = 0;
+
+        function nomesUsados() {
+            return Array.prototype.map.call(listaTamanhos.querySelectorAll("[data-linha]"), function (l) {
+                return l.dataset.nome.toLowerCase();
+            });
+        }
+
+        function atualizarTamanhos() {
+            var linhas = listaTamanhos.querySelectorAll("[data-linha]");
+            var chips = [];
+
+            linhas.forEach(function (linha) {
+                var entrada = linha.querySelector("input[type=number]");
+                var qtd = parseInt(entrada.value, 10);
+                if (isNaN(qtd)) { qtd = 0; }
+
+                var status = linha.querySelector(".estoque-status");
+                status.textContent = qtd > 0 ? "Em estoque" : "Esgotado";
+                status.classList.toggle("esgotado", qtd <= 0);
+
+                chips.push({ nome: linha.dataset.nome, qtd: qtd });
+            });
+
+            $("tamanhos-vazio").hidden = linhas.length > 0;
+
+            // pre-visualização dos tamanhos na página do produto
+            todos("[data-esp-tamanhos]").forEach(function (alvo) {
+                alvo.textContent = "";
+                if (chips.length === 0) {
+                    var vazio = document.createElement("small");
+                    vazio.textContent = "Nenhum tamanho adicionado.";
+                    alvo.appendChild(vazio);
+                }
+                chips.forEach(function (c) {
+                    var chip = document.createElement("span");
+                    chip.className = "tamanho" + (c.qtd <= 0 ? " esgotado" : "");
+                    chip.appendChild(document.createTextNode(c.nome));
+                    var peq = document.createElement("small");
+                    peq.textContent = c.qtd <= 0 ? "Esgotado" : c.qtd + " un.";
+                    chip.appendChild(peq);
+                    alvo.appendChild(chip);
+                });
+            });
+
+            // marca os botoes rapidos que ja foram usados
+            var usados = nomesUsados();
+            todos("[data-rapido]").forEach(function (b) {
+                b.disabled = usados.indexOf(b.dataset.rapido.toLowerCase()) !== -1;
+            });
+        }
+
+        function avisarTamanho(msg) {
+            avisoTamanho.textContent = msg;
+            avisoTamanho.hidden = msg === "";
+        }
+
+        function adicionarTamanho(nome) {
+            nome = nome.trim();
+            if (nome === "") { return; }
+
+            if (nomesUsados().indexOf(nome.toLowerCase()) !== -1) {
+                avisarTamanho("O tamanho " + nome + " já está na lista.");
+                return;
+            }
+            avisarTamanho("");
+
+            var indice = proximoNovo++;
+            var linha = document.createElement("div");
+            linha.className = "tamanho-linha";
+            linha.setAttribute("data-linha", "");
+            linha.dataset.nome = nome;
+
+            var rotulo = document.createElement("span");
+            rotulo.className = "tamanho-nome";
+            rotulo.textContent = nome;
+
+            var oculto = document.createElement("input");
+            oculto.type = "hidden";
+            oculto.name = "novos_tamanhos[" + indice + "][nome]";
+            oculto.value = nome;
+
+            var envoltorio = document.createElement("div");
+            envoltorio.className = "estoque-form";
+            var entrada = document.createElement("input");
+            entrada.type = "number";
+            entrada.name = "novos_tamanhos[" + indice + "][estoque]";
+            entrada.value = "0";
+            entrada.min = "0"; entrada.max = "2147483647"; entrada.step = "1"; entrada.required = true;
+            entrada.setAttribute("aria-label", "Estoque do tamanho " + nome);
+            var un = document.createElement("span");
+            un.className = "estoque-un";
+            un.textContent = "un.";
+            envoltorio.appendChild(entrada);
+            envoltorio.appendChild(un);
+
+            var status = document.createElement("span");
+            status.className = "estoque-status";
+
+            var remover = document.createElement("button");
+            remover.type = "button";
+            remover.className = "btn-link-perigo";
+            remover.setAttribute("data-remover", "");
+            remover.textContent = "Remover";
+
+            linha.appendChild(rotulo);
+            linha.appendChild(oculto);
+            linha.appendChild(envoltorio);
+            linha.appendChild(status);
+            linha.appendChild(remover);
+            listaTamanhos.appendChild(linha);
+
+            atualizarTamanhos();
+            entrada.focus();
+            entrada.select();
+        }
+
+        todos("[data-rapido]").forEach(function (b) {
+            b.addEventListener("click", function () { adicionarTamanho(b.dataset.rapido); });
+        });
+
+        var campoOutro = $("tamanho-outro");
+        function adicionarOutro() {
+            adicionarTamanho(campoOutro.value);
+            if (avisoTamanho.hidden) { campoOutro.value = ""; }
+        }
+        $("tamanho-add").addEventListener("click", adicionarOutro);
+        campoOutro.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") { e.preventDefault(); adicionarOutro(); }
+        });
+
+        listaTamanhos.addEventListener("input", atualizarTamanhos);
+        listaTamanhos.addEventListener("click", function (e) {
+            var botao = e.target.closest("[data-remover]");
+            if (!botao) { return; }
+
+            var linha = botao.closest("[data-linha]");
+            // tamanho que ja existe no banco: avisa o servidor para excluir ao salvar
+            if (botao.dataset.id) {
+                var apagar = document.createElement("input");
+                apagar.type = "hidden";
+                apagar.name = "remover_tamanhos[]";
+                apagar.value = botao.dataset.id;
+                $("form-produto").appendChild(apagar);
+            }
+            linha.remove();
+            avisarTamanho("");
+            atualizarTamanhos();
+        });
+
         [nome, descricao, preco].forEach(function (c) { c.addEventListener("input", atualizarTexto); });
         categoria.addEventListener("change", atualizarTexto);
 
         atualizarTexto();
+        atualizarTamanhos();
     })();
 </script>

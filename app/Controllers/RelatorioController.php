@@ -22,11 +22,18 @@
             $status = $this->pegarStatus();
             $categorias = $this->model->estoquePorCategoria();
             $produtos = $this->model->estoquePorProduto($status);
-            $tamanhos = $this->model->estoquePorTamanho($status);
+
+            //junta os tamanhos de cada produto numa lista (ex.: P: 10, M: 15), sem filtrar por status
+            $tamanhosPorProduto = [];
+            foreach ($this->model->estoquePorTamanho() as $t) {
+                if ($t["tamanho"] !== null) {
+                    $tamanhosPorProduto[$t["produto_id"]][] = $t["tamanho"] . ": " . $t["estoque"];
+                }
+            }
 
             return (new Render())->render(
                 'relatorios/index',
-                compact('titulo', 'status', 'categorias', 'produtos', 'tamanhos')
+                compact('titulo', 'status', 'categorias', 'produtos', 'tamanhosPorProduto')
             );
         }
 
